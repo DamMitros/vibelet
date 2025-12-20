@@ -60,4 +60,15 @@ public class UserService {
             return new UserSearchDto(user.getId(), user.getUsername(), user.getAvatarUrl(), status);
         }).collect(Collectors.toList());
     }
+
+    public User updateUserProfile(String username, com.example.vibelet.dto.UserProfileUpdateDto dto) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (dto.getBio() != null) user.setBio(dto.getBio());
+        if (dto.getStatus() != null) user.setStatus(dto.getStatus());
+        if (dto.getAvatarUrl() != null) user.setAvatarUrl(dto.getAvatarUrl());
+
+        return userRepository.save(user);
+    }
 }

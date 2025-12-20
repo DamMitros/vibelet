@@ -22,6 +22,13 @@ public class UserController {
         return ResponseEntity.ok(userService.searchUsers(query, principal.getName()));
     }
 
+    @PutMapping("/me")
+    public ResponseEntity<com.example.vibelet.model.User> updateMyProfile(
+            @RequestBody com.example.vibelet.dto.UserProfileUpdateDto dto,
+            java.security.Principal principal) {
+        return ResponseEntity.ok(userService.updateUserProfile(principal.getName(), dto));
+    }
+
     @DeleteMapping("/me")
     public ResponseEntity<String> deleteMyAccount(Principal principal) {
         userService.deleteUser(principal.getName());
