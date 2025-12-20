@@ -1,11 +1,12 @@
 package com.example.vibelet.controller;
 
+import com.example.vibelet.dto.UserSearchDto;
 import com.example.vibelet.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -14,6 +15,11 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<UserSearchDto>> searchUsers(@RequestParam String query, Principal principal) {
+        return ResponseEntity.ok(userService.searchUsers(query, principal.getName()));
     }
 
     @DeleteMapping("/me")
