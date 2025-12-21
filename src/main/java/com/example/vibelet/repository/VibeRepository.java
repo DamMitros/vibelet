@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+
 public interface VibeRepository extends JpaRepository<Vibe, Long> {
 
     @Query("SELECT v FROM Vibe v WHERE " +
@@ -30,4 +32,5 @@ public interface VibeRepository extends JpaRepository<Vibe, Long> {
     );
 
     Page<Vibe> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
+    boolean existsByUserAndContentAndCreatedAt(User user, String content, LocalDateTime createdAt);
 }
