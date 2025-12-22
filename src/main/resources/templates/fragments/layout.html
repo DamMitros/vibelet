@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(content)">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Vibelet</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            'head': ['"Archivo Black"', 'sans-serif'],
+                            'mono': ['"Space Mono"', 'monospace'],
+                            'body': ['"Work Sans"', 'sans-serif'],
+                        },
+                        colors: {
+                            'acid-yellow': '#EBFF00',
+                            'acid-pink': '#FF90E8',
+                            'acid-blue': '#90E0FF',
+                            'acid-green': '#23A094',
+                            'off-white': '#F4F4F0',
+                            'ink': '#121212'
+                        },
+                        boxShadow: {
+                            'neo': '5px 5px 0px 0px #121212',
+                            'neo-sm': '3px 3px 0px 0px #121212',
+                            'neo-lg': '8px 8px 0px 0px #121212',
+                            'neo-hover': '2px 2px 0px 0px #121212',
+                        }
+                    }
+                }
+            }
+        </script>
+
+        <style>
+            body {
+                background-color: #90E0FF;
+                background-image: radial-gradient(#121212 1px, transparent 1px);
+                background-size: 24px 24px;
+            }
+            ::-webkit-scrollbar { width: 12px; }
+            ::-webkit-scrollbar-track { background: #121212; border-left: 2px solid #121212; }
+            ::-webkit-scrollbar-thumb { background: #EBFF00; border: 2px solid #121212; }
+            ::-webkit-scrollbar-thumb:hover { background: #FF90E8; }
+
+            .neo-box {
+                background: white;
+                border: 3px solid #121212;
+                box-shadow: 6px 6px 0px 0px #121212;
+                transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .neo-box:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0px 0px #121212; }
+            .neo-box:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px 0px #121212; }
+
+            .neo-btn {
+                @apply font-head uppercase tracking-wider px-6 py-3 border-[3px] border-black transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none;
+                box-shadow: 4px 4px 0px 0px #000;
+            }
+
+            .rotate-random:nth-child(odd) { transform: rotate(1deg); }
+            .rotate-random:nth-child(even) { transform: rotate(-1deg); }
+            .rotate-random:hover { transform: rotate(0deg) scale(1.02); z-index: 10; }
+        </style>
+    </head>
+    <body class="h-screen flex flex-col font-body text-ink overflow-hidden selection:bg-acid-yellow selection:text-black">
+
+    <div class="h-12 bg-acid-yellow border-b-[3px] border-black flex items-center overflow-hidden z-50">
+        <div class="w-full font-mono font-bold text-lg uppercase tracking-widest text-center">
+            +++ VIBELET BETA v9.0 +++ NO ALGO +++ PURE CHAOS +++
+        </div>
+    </div>
+
+    <div class="flex-1 flex overflow-hidden">
+
+        <aside class="w-20 lg:w-72 bg-off-white border-r-[3px] border-black flex flex-col p-4 overflow-y-auto z-40">
+            <div class="mb-10 lg:pl-2 pt-2">
+                <h1 class="hidden lg:block font-head text-5xl leading-[0.8] mb-2 cursor-pointer">
+                    VIBE<br><span class="text-acid-pink text-stroke-black">LET.</span>
+                </h1>
+                <div class="lg:hidden font-head text-4xl text-center mb-6">V.</div>
+                <div class="hidden lg:block h-2 bg-black w-16 mb-2"></div>
+            </div>
+
+            <nav class="flex-1 flex flex-col gap-4">
+                <a th:href="@{/feed}" class="neo-box p-3 lg:px-6 lg:py-4 flex items-center gap-4 hover:bg-acid-pink group">
+                    <i class="fa-solid fa-eye text-2xl group-hover:rotate-12 transition"></i>
+                    <span class="hidden lg:block font-head text-xl group-hover:underline decoration-4 underline-offset-4">FEED</span>
+                </a>
+                <a th:href="@{/explore}" class="neo-box p-3 lg:px-6 lg:py-4 flex items-center gap-4 hover:bg-acid-yellow group">
+                    <i class="fa-solid fa-globe text-2xl group-hover:-rotate-12 transition"></i>
+                    <span class="hidden lg:block font-head text-xl">ZONE</span>
+                </a>
+                <a th:href="@{/friends}" class="neo-box p-3 lg:px-6 lg:py-4 flex items-center gap-4 hover:bg-acid-blue group relative">
+                    <i class="fa-solid fa-user-group text-2xl"></i>
+                    <span class="hidden lg:block font-head text-xl">SQUAD</span>
+                </a>
+                <a th:href="@{/profile}" class="neo-box p-3 lg:px-6 lg:py-4 flex items-center gap-4 hover:bg-acid-green group">
+                    <i class="fa-solid fa-face-dizzy text-2xl group-hover:scale-110 transition"></i>
+                    <span class="hidden lg:block font-head text-xl">YOU</span>
+                </a>
+            </nav>
+
+            <div class="mt-auto hidden lg:flex flex-col gap-2 border-[3px] border-black p-3 bg-white shadow-neo-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 border-2 border-black bg-acid-blue"></div>
+                    <div class="leading-none">
+                        <p class="font-bold font-mono text-sm uppercase" th:text="${#authentication.name}">USER</p>
+                        <p class="text-xs font-mono text-gray-500">ONLINE_//</p>
+                    </div>
+                </div>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="w-full bg-black text-white font-mono text-xs py-1 hover:bg-red-500 transition">WYLOGUJ</button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-4 lg:p-10 relative scroll-smooth" id="main-scroll">
+            <div class="max-w-3xl mx-auto flex flex-col gap-10 pb-24" th:replace="${content}">
+
+            </div>
+        </main>
+
+        <aside class="hidden xl:flex w-80 p-6 flex-col gap-8 z-30">
+            <div class="neo-box p-1 bg-acid-pink">
+                <div class="bg-white border-[3px] border-black p-4">
+                    <label class="font-head text-xl mb-2 block uppercase">Find Stuff</label>
+                    <div class="flex">
+                        <input type="text" class="w-full border-[3px] border-black border-r-0 p-2 font-mono text-sm focus:outline-none bg-off-white" placeholder="SEARCH...">
+                        <button class="bg-black text-white px-3 border-[3px] border-black border-l-0 hover:bg-acid-yellow hover:text-black transition">
+                            <i class="fa-solid fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+    <!--        <div class="neo-box bg-white p-0">-->
+    <!--            <div class="bg-black text-white p-3 font-head text-xl text-center border-b-[3px] border-black">-->
+    <!--                HOT GARBAGE 🔥-->
+    <!--            </div>-->
+    <!--            <ul class="font-mono text-sm font-bold">-->
+    <!--                <li class="border-b-2 border-black p-3 hover:bg-acid-yellow cursor-pointer flex justify-between group">-->
+    <!--                    <span>#Y2K_AESTHETIC</span>-->
+    <!--                    <span class="group-hover:translate-x-1 transition">-></span>-->
+    <!--                </li>-->
+    <!--                <li class="p-3 hover:bg-acid-green cursor-pointer flex justify-between group">-->
+    <!--                    <span>#BRUTALISM</span>-->
+    <!--                    <span class="group-hover:translate-x-1 transition">-></span>-->
+    <!--                </li>-->
+    <!--            </ul>-->
+    <!--        </div>-->
+        </aside>
+
+    </div>
+    </body>
+</html>

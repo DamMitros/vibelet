@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>VibeLet - Login</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            'head': ['"Archivo Black"', 'sans-serif'],
+                            'mono': ['"Space Mono"', 'monospace'],
+                        },
+                        colors: { 'acid-yellow': '#EBFF00', 'acid-pink': '#FF90E8' },
+                        boxShadow: { 'neo': '8px 8px 0px 0px #121212' }
+                    }
+                }
+            }
+        </script>
+        <style>
+            body { background-color: #EBFF00; background-image: radial-gradient(#000 2px, transparent 2px); background-size: 30px 30px; }
+        </style>
+    </head>
+    <body class="h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white border-[4px] border-black p-8 w-full max-w-md shadow-neo relative">
+        <div class="absolute -top-6 -left-6 bg-acid-pink border-[4px] border-black p-2 font-head text-xl shadow-[4px_4px_0px_0px_#000]">
+            ACCESS_DENIED
+        </div>
+
+        <h1 class="font-head text-5xl mb-8 text-center">LOGIN</h1>
+
+        <div th:if="${param.error}" class="bg-red-500 text-white border-[3px] border-black p-2 mb-4 font-mono font-bold text-center">
+            WRONG CREDENTIALS
+        </div>
+        <div th:if="${param.logout}" class="bg-acid-blue text-black border-[3px] border-black p-2 mb-4 font-mono font-bold text-center">
+            LOGGED OUT
+        </div>
+
+        <form th:action="@{/templates/login}" method="post" class="space-y-6">
+            <div>
+                <label class="block font-mono font-bold mb-2 uppercase">Username</label>
+                <input type="text" name="username" class="w-full border-[3px] border-black p-3 font-mono focus:bg-acid-yellow focus:outline-none transition">
+            </div>
+            <div>
+                <label class="block font-mono font-bold mb-2 uppercase">Password</label>
+                <input type="password" name="password" class="w-full border-[3px] border-black p-3 font-mono focus:bg-acid-pink focus:outline-none transition">
+            </div>
+
+            <button type="submit" class="w-full bg-black text-white font-head text-2xl py-4 hover:bg-white hover:text-black border-[3px] border-black transition shadow-[4px_4px_0px_0px_#000] active:translate-x-1 active:translate-y-1 active:shadow-none">
+                ENTER
+            </button>
+        </form>
+
+        <div class="mt-6 text-center font-mono text-sm font-bold">
+            NO ACCOUNT? <a th:href="@{/templates/register}" class="underline decoration-4 decoration-acid-green hover:bg-acid-green px-1">REGISTER NOW</a>
+        </div>
+    </div>
+
+    </body>
+</html>

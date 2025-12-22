@@ -22,8 +22,23 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**", "/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**",
+                                "/login", "/register",
+                                "/css/**", "/js/**", "/images/**",
+                                "/h2-console/**", "/swagger-ui/**",
+                                "/swagger-ui.html", "/v3/api-docs/**",
+                                "/v3/api-docs").permitAll()
                         .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/feed", true)
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll()
                 )
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
