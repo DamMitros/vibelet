@@ -44,6 +44,14 @@
                             <span class="font-mono text-[10px] border border-black px-1 ml-2" th:text="${vibe.privacyStatus}">PUBLIC</span>
                         </div>
                     </div>
+
+                    <div th:if="${vibe.user.username == #authentication.name}">
+                        <form th:action="@{'/vibes/' + ${vibe.id} + '/delete'}" method="post" onsubmit="return confirm('DELETE THIS VIBE? NO REGRETS?');">
+                            <button type="submit" class="bg-red-500 text-white border-[3px] border-black px-2 py-1 font-mono text-xs hover:bg-black hover:text-white transition shadow-neo-sm">
+                                <i class="fa-solid fa-trash"></i> DELETE
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <div class="p-4">

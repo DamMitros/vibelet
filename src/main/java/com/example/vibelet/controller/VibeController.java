@@ -49,4 +49,21 @@ public class VibeController {
 
         return ResponseEntity.ok(vibeService.getUserVibes(userId, page, size));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteVibe(@PathVariable Long id, Principal principal) {
+        vibeService.deleteVibe(id, principal.getName());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Vibe> updateVibe(
+            @PathVariable Long id,
+            @RequestParam(required = false) String content,
+            @RequestParam(required = false) PrivacyStatus privacy,
+            Principal principal) {
+
+        Vibe updatedVibe = vibeService.updateVibe(id, principal.getName(), content, privacy);
+        return ResponseEntity.ok(updatedVibe);
+    }
 }

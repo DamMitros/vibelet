@@ -87,6 +87,12 @@ public class WebController {
         return "redirect:/feed";
     }
 
+    @PostMapping("/vibes/{id}/delete")
+    public String deleteVibe(@PathVariable Long id, Principal principal) {
+        vibeService.deleteVibe(id, principal.getName());
+        return "redirect:/feed";
+    }
+
     @GetMapping("/profile")
     public String profile(Model model, Principal principal) {
         User currentUser = userRepository.findByUsername(principal.getName())

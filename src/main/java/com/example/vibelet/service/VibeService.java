@@ -63,6 +63,41 @@ public class VibeService {
         return vibeRepository.save(vibe);
     }
 
+    public void deleteVibe(Long vibeId, String username) {
+        Vibe vibe = vibeRepository.findById(vibeId)
+                .orElseThrow(() -> new RuntimeException("Vibe not found"));
+
+        if (!vibe.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Access denied: You are not the owner of this vibe.");
+        }
+        if (vibe.getImageUrl() != null) {
+            try {
+                Files.deleteIfExists(this.rootLocation.resolve(vibe.getImageUrl()));
+            } catch (IOException e) {
+                System.err.println("Could not delete file: " + vibe.getImageUrl());
+            }
+        }
+
+        vibeRepository.delete(vibe);
+    }
+
+    public Vibe updateVibe(Long vibeId, String username, String newContent, PrivacyStatus newPrivacy) {
+        Vibe vibe = vibeRepository.findById(vibeId)
+                .orElseThrow(() -> new RuntimeException("Vibe not found"));
+
+        if (!vibe.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Access denied: You are not the owner.");
+        }
+        if (newContent != null && !newContent.isBlank()) {
+            vibe.setContent(newContent);
+        }
+        if (newPrivacy != null) {
+            vibe.setPrivacyStatus(newPrivacy);
+        }
+
+        return vibeRepository.save(vibe);
+    }
+
     public Page<Vibe> getFeed(String username, int page, int size) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
