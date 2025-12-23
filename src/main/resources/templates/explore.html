@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::content})}">
+    <head><title>EXPLORE ZONE</title></head>
+    <body>
+    <div th:fragment="content">
+
+        <div class="neo-box p-2 bg-acid-blue mb-8">
+            <form th:action="@{/explore}" method="get" class="flex gap-2">
+                <input type="text" name="query" placeholder="WHO ARE YOU LOOKING FOR?" class="flex-1 border-[3px] border-black p-4 font-head text-xl uppercase placeholder:text-gray-400 focus:outline-none focus:bg-acid-yellow transition">
+                <button type="submit" class="bg-black text-white px-6 border-[3px] border-black hover:bg-white hover:text-black transition font-mono text-2xl">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="grid gap-6">
+            <h2 class="font-head text-3xl bg-white border-[3px] border-black inline-block px-4 py-2 transform rotate-1 shadow-neo-sm w-fit" th:if="${searchResults}">
+                RESULTS_//
+            </h2>
+
+            <div th:each="user : ${searchResults}" class="neo-box p-4 bg-white flex items-center justify-between group hover:bg-off-white">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 border-[3px] border-black bg-gray-200 overflow-hidden">
+                        <img th:if="${user.avatarUrl}" th:src="${user.avatarUrl}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition">
+                    </div>
+                    <div>
+                        <h3 class="font-head text-2xl" th:text="${user.username}">USER</h3>
+                        <span class="font-mono text-xs bg-black text-white px-2 py-0.5" th:text="${user.friendshipStatus}">STATUS</span>
+                    </div>
+                </div>
+
+                <div th:switch="${user.friendshipStatus}">
+                    <form th:case="'NONE'" th:action="@{'/api/v1/friends/request/' + ${user.id}}" method="post">
+                        <button class="bg-acid-green border-[3px] border-black p-3 hover:shadow-neo-sm transition active:translate-x-1 active:translate-y-1">
+                            <i class="fa-solid fa-user-plus text-xl"></i>
+                        </button>
+                    </form>
+                    <button th:case="'PENDING'" class="bg-gray-300 border-[3px] border-black p-3 cursor-not-allowed">
+                        <i class="fa-solid fa-clock text-xl"></i>
+                    </button>
+                    <button th:case="'FRIEND'" class="bg-acid-pink border-[3px] border-black p-3">
+                        <i class="fa-solid fa-heart text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div th:if="${searchResults != null and searchResults.empty}" class="neo-box p-8 text-center bg-white border-dashed">
+                <i class="fa-solid fa-ghost text-6xl mb-4"></i>
+                <p class="font-head text-2xl">NOBODY FOUND.</p>
+            </div>
+        </div>
+
+    </div>
+    </body>
+</html>

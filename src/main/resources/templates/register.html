@@ -37,7 +37,7 @@
             ERROR
         </div>
 
-        <form th:action="@{/templates/register}" th:object="${registerRequest}" method="post" class="space-y-4">
+        <form th:action="@{/register}" th:object="${registerRequest}" method="post" class="space-y-4">
             <div>
                 <label class="block font-mono font-bold mb-1 uppercase">Username</label>
                 <input type="text" th:field="*{username}" class="w-full border-[3px] border-black p-3 font-mono focus:bg-acid-blue focus:outline-none transition">
@@ -60,7 +60,7 @@
         </form>
 
         <div class="mt-6 text-center font-mono text-sm font-bold">
-            GOT ACCOUNT? <a th:href="@{/templates/login}" class="underline decoration-4 decoration-acid-yellow hover:bg-acid-yellow px-1">LOGIN</a>
+            GOT ACCOUNT? <a th:href="@{/login}" class="underline decoration-4 decoration-acid-yellow hover:bg-acid-yellow px-1">LOGIN</a>
         </div>
     </div>
 

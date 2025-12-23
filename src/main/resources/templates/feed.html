@@ -4,12 +4,12 @@
     <body>
     <div th:fragment="content">
 
-        <div class="neo-box p-6 relative bg-white transform -rotate-1">
+        <div class="neo-box p-6 mb-8 relative bg-white transform -rotate-1">
             <div class="absolute -top-3 -left-3 bg-acid-green border-[3px] border-black px-2 py-1 font-mono text-xs font-bold shadow-neo-sm">
                 NEW_TRANSMISSION
             </div>
 
-            <form th:action="@{/templates/vibes}" method="post" enctype="multipart/form-data">
+            <form th:action="@{/vibes}" method="post" enctype="multipart/form-data">
                 <textarea name="content" class="w-full bg-off-awhite border-[3px] border-black p-4 font-mono text-lg focus:outline-none focus:bg-white focus:shadow-neo-sm transition resize-none h-32 placeholder:text-gray-400" placeholder="WRITE SOMETHING LOUD..."></textarea>
 
                 <div class="flex justify-between items-end mt-4">
