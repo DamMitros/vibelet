@@ -2,6 +2,8 @@ package com.example.vibelet.service;
 
 import com.example.vibelet.model.*;
 import com.example.vibelet.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +19,7 @@ import java.util.UUID;
 
 @Service
 public class VibeService {
+    private static final Logger log = LoggerFactory.getLogger(VibeService.class);
     private final VibeRepository vibeRepository;
     private final UserRepository userRepository;
     private final Path rootLocation = Paths.get("uploads");
@@ -37,6 +40,7 @@ public class VibeService {
         try {
             Files.createDirectories(rootLocation);
         } catch (IOException e) {
+            log.error("Could not initialize storage", e);
             throw new RuntimeException("Could not initialize storage", e);
         }
     }
@@ -56,6 +60,7 @@ public class VibeService {
                 Files.copy(file.getInputStream(), this.rootLocation.resolve(fileName));
                 vibe.setImageUrl(fileName);
             } catch (IOException e) {
+                log.error("Failed to store file for user {}", username, e);
                 throw new RuntimeException("Failed to store file", e);
             }
         }
@@ -68,17 +73,19 @@ public class VibeService {
                 .orElseThrow(() -> new RuntimeException("Vibe not found"));
 
         if (!vibe.getUser().getUsername().equals(username)) {
+            log.warn("Security Event: User {} tried to delete vibe {} belonging to {}", username, vibeId, vibe.getUser().getUsername());
             throw new RuntimeException("Access denied: You are not the owner of this vibe.");
         }
         if (vibe.getImageUrl() != null) {
             try {
                 Files.deleteIfExists(this.rootLocation.resolve(vibe.getImageUrl()));
             } catch (IOException e) {
-                System.err.println("Could not delete file: " + vibe.getImageUrl());
+                log.error("Could not delete file: {}", vibe.getImageUrl(), e);
             }
         }
 
         vibeRepository.delete(vibe);
+        log.info("Vibe {} deleted by user {}", vibeId, username);
     }
 
     public Vibe updateVibe(Long vibeId, String username, String newContent, PrivacyStatus newPrivacy) {

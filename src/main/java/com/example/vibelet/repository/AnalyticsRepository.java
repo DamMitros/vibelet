@@ -35,4 +35,10 @@ public class AnalyticsRepository {
             }
         });
     }
+
+    public void resetUserLikes(String username) {
+        String sql = "DELETE FROM post_likes WHERE user_id = (SELECT id FROM users WHERE username = ?)";
+        int rows = jdbcTemplate.update(sql, username);
+        System.out.println("JDBC Audit: Usunięto " + rows + " lajków dla użytkownika " + username);
+    }
 }

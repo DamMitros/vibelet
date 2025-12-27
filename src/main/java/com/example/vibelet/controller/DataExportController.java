@@ -2,9 +2,8 @@ package com.example.vibelet.controller;
 
 import com.example.vibelet.dto.DataExportDto;
 import com.example.vibelet.dto.VibeExportDto;
-import com.example.vibelet.model.PrivacyStatus;
-import com.example.vibelet.model.User;
-import com.example.vibelet.model.Vibe;
+import com.example.vibelet.model.*;
+import com.example.vibelet.repository.FriendshipRepository;
 import com.example.vibelet.repository.UserRepository;
 import com.example.vibelet.repository.VibeRepository;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -21,10 +21,12 @@ import java.util.stream.Collectors;
 public class DataExportController {
     private final UserRepository userRepository;
     private final VibeRepository vibeRepository;
+    private final FriendshipRepository friendshipRepository;
 
-    public DataExportController(UserRepository userRepository, VibeRepository vibeRepository) {
+    public DataExportController(UserRepository userRepository, VibeRepository vibeRepository, FriendshipRepository friendshipRepository) {
         this.userRepository = userRepository;
         this.vibeRepository = vibeRepository;
+        this.friendshipRepository = friendshipRepository;
     }
 
     @GetMapping("/export")
@@ -36,11 +38,17 @@ public class DataExportController {
                 .map(v -> new VibeExportDto(v.getContent(), v.getCreatedAt().toString()))
                 .collect(Collectors.toList());
 
+        List<Friendship> friendships = friendshipRepository.findAllFriendsOfUser(user);
+        List<String> friendsList = friendships.stream()
+                .map(f -> f.getRequester().getId().equals(user.getId()) ? f.getReceiver().getUsername() : f.getRequester().getUsername())
+                .collect(Collectors.toList());
+
         DataExportDto exportData = new DataExportDto(
                 user.getUsername(),
                 user.getEmail(),
                 user.getBio(),
-                vibesDtoList
+                vibesDtoList,
+                friendsList
         );
 
         return ResponseEntity.ok(exportData);
@@ -55,10 +63,9 @@ public class DataExportController {
         if (data.getBio() != null) {
             user.setBio(data.getBio());
         }
-
         userRepository.save(user);
 
-        int importedCount = 0;
+        int importedVibesCount = 0;
         if (data.getVibes() != null && !data.getVibes().isEmpty()) {
             for (VibeExportDto vibeDto : data.getVibes()) {
                 LocalDateTime createdAt;
@@ -80,13 +87,30 @@ public class DataExportController {
                     newVibe.setCreatedAt(createdAt);
                     newVibe.setUser(user);
                     newVibe.setPrivacyStatus(PrivacyStatus.PRIVATE);
-
                     vibeRepository.save(newVibe);
-                    importedCount++;
+                    importedVibesCount++;
                 }
             }
         }
 
-        return ResponseEntity.ok("Data imported successfully. Vibes imported: " + importedCount);
+        int importedFriendsCount = 0;
+        if (data.getFriends() != null) {
+            for (String friendUsername : data.getFriends()) {
+                Optional<User> friendOpt = userRepository.findByUsername(friendUsername);
+                if (friendOpt.isPresent()) {
+                    User friend = friendOpt.get();
+                    if (!friendshipRepository.existsByUsers(user, friend)) {
+                        Friendship friendship = new Friendship();
+                        friendship.setRequester(user);
+                        friendship.setReceiver(friend);
+                        friendship.setStatus(FriendshipStatus.ACCEPTED);
+                        friendshipRepository.save(friendship);
+                        importedFriendsCount++;
+                    }
+                }
+            }
+        }
+
+        return ResponseEntity.ok(String.format("Data imported. Vibes: %d, Friends restored: %d", importedVibesCount, importedFriendsCount));
     }
 }

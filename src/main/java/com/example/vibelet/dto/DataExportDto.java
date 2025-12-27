@@ -7,15 +7,17 @@ public class DataExportDto {
     private String email;
     private String bio;
     private List<VibeExportDto> vibes;
+    private List<String> friends;
 
     public DataExportDto() {
     }
 
-    public DataExportDto(String username, String email, String bio, List<VibeExportDto> vibes) {
+    public DataExportDto(String username, String email, String bio, List<VibeExportDto> vibes, List<String> friends) {
         this.username = username;
         this.email = email;
         this.bio = bio;
         this.vibes = vibes;
+        this.friends = friends;
     }
 
     public String getUsername() {
@@ -48,5 +50,13 @@ public class DataExportDto {
 
     public void setVibes(List<VibeExportDto> vibes) {
         this.vibes = vibes;
+    }
+
+    public List<String> getFriends() {
+        return friends;
+    }
+
+    public void setFriends(List<String> friends) {
+        this.friends = friends;
     }
 }
