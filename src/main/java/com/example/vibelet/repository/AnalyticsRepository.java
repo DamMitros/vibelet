@@ -36,9 +36,9 @@ public class AnalyticsRepository {
         });
     }
 
-    public void resetUserLikes(String username) {
-        String sql = "DELETE FROM post_likes WHERE user_id = (SELECT id FROM users WHERE username = ?)";
+    public void banUser(String username) {
+        String sql = "UPDATE users SET status = 'BANNED' WHERE username = ?";
         int rows = jdbcTemplate.update(sql, username);
-        System.out.println("JDBC Audit: Usunięto " + rows + " lajków dla użytkownika " + username);
+        System.out.println("JDBC Audit: Użytkownik " + username + " został zbanowany. Zmieniono wierszy: " + rows);
     }
 }
