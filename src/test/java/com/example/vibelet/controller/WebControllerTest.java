@@ -2,6 +2,7 @@ package com.example.vibelet.controller;
 
 import com.example.vibelet.dto.UserSearchDto;
 import com.example.vibelet.model.*;
+import com.example.vibelet.repository.FriendshipRepository;
 import com.example.vibelet.repository.UserRepository;
 import com.example.vibelet.repository.VibeRepository;
 import com.example.vibelet.security.CustomUserDetailsService;
@@ -40,23 +41,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(WebController.class)
 @Import(SecurityConfig.class)
 class WebControllerTest {
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @MockitoBean
-    private VibeService vibeService;
-    @MockitoBean
-    private UserService userService;
-    @MockitoBean
-    private AuthService authService;
-    @MockitoBean
-    private FriendshipService friendshipService;
-    @MockitoBean
-    private UserRepository userRepository;
-    @MockitoBean
-    private VibeRepository vibeRepository;
-    @MockitoBean
-    private CustomUserDetailsService customUserDetailsService;
+    @MockitoBean private VibeService vibeService;
+    @MockitoBean private UserService userService;
+    @MockitoBean private AuthService authService;
+    @MockitoBean private FriendshipService friendshipService;
+    @MockitoBean private UserRepository userRepository;
+    @MockitoBean private VibeRepository vibeRepository;
+    @MockitoBean private CustomUserDetailsService customUserDetailsService;
+    @MockitoBean private FriendshipRepository friendshipRepository;
 
     private User currentUser;
     private User otherUser;
@@ -268,19 +262,29 @@ class WebControllerTest {
     void userProfile_ReturnsUserProfile() throws Exception {
         given(userRepository.findById(2L)).willReturn(Optional.of(otherUser));
         given(userRepository.findByUsername("user")).willReturn(Optional.of(currentUser));
-        given(friendshipService.areFriends(currentUser, otherUser)).willReturn(true);
+
+        Friendship friendship = new Friendship();
+        friendship.setId(99L);
+        friendship.setRequester(currentUser);
+        friendship.setReceiver(otherUser);
+        friendship.setStatus(FriendshipStatus.ACCEPTED);
+
+        given(friendshipService.getFriendshipRepository()).willReturn(friendshipRepository);
+        given(friendshipRepository.findByRequesterAndReceiver(currentUser, otherUser))
+                .willReturn(Optional.of(friendship));
+
         given(friendshipService.getAcceptedFriendships("other")).willReturn(List.of());
         given(vibeRepository.findByUserOrderByCreatedAtDesc(eq(otherUser), any(PageRequest.class)))
                 .willReturn(new PageImpl<>(List.of()));
+        given(vibeRepository.countByUser(otherUser)).willReturn(0L);
 
         mockMvc.perform(get("/users/{id}", 2L))
                 .andExpect(status().isOk())
                 .andExpect(view().name("user_profile"))
                 .andExpect(model().attributeExists("targetUser"))
                 .andExpect(model().attributeExists("currentUser"))
-                .andExpect(model().attributeExists("friendshipStatus"))
-                .andExpect(model().attributeExists("vibes"))
-                .andExpect(model().attributeExists("friendCount"))
-                .andExpect(model().attributeExists("vibeCount"));
+                .andExpect(model().attribute("friendshipStatus", "FRIEND"))
+                .andExpect(model().attributeExists("friendshipId"))
+                .andExpect(model().attributeExists("vibes"));
     }
 }

@@ -203,18 +203,46 @@
                     const input = document.getElementById(`comment-input-${vibeId}`);
                     const list = document.getElementById(`comments-list-${vibeId}`);
                     const countSpan = document.getElementById(`comments-count-${vibeId}`);
-                    const content = input.value;
-                    if (!content.trim()) return;
+
+                    if (!input || !input.value.trim()) return;
 
                     try {
                         const response = await fetch(`/api/v1/interactions/vibe/${vibeId}/comment`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ content: content })
+                            body: JSON.stringify({ content: input.value })
                         });
 
                         if (response.ok) {
-                            location.reload();
+                            const data = await response.json();
+                            const newCommentHtml = `
+                <div id="comment-row-${data.id}" class="border-l-2 border-black pl-2 flex justify-between items-start bg-white p-2 animate-pulse">
+                    <div class="flex-1 mr-2">
+                        <a href="/users/${data.userId}" class="font-bold hover:underline">${data.username}</a>:
+                        <span id="comment-content-${data.id}">${data.content}</span>
+
+                        <div id="comment-edit-box-${data.id}" class="hidden mt-1">
+                            <input type="text" id="comment-edit-input-${data.id}" value="${data.content}" class="w-full border border-black px-1 text-xs">
+                            <div class="mt-1 flex gap-1">
+                                <button onclick="saveEditComment(${data.id})" class="bg-black text-white px-1 text-[10px]">SAVE</button>
+                                <button onclick="cancelEditComment(${data.id})" class="bg-gray-200 px-1 text-[10px]">CANCEL</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[10px] text-gray-500 whitespace-nowrap">JUST NOW</span>
+
+                        <div class="flex gap-1">
+                            <button onclick="enableEditComment(${data.id})" class="text-[10px] hover:text-blue-600"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteComment(${data.id})" class="text-[10px] hover:text-red-600"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+                            list.insertAdjacentHTML('beforeend', newCommentHtml);
+                            input.value = '';
+                            if(countSpan) countSpan.innerText = parseInt(countSpan.innerText) + 1;
                         }
                     } catch (e) { console.error(e); }
                 }

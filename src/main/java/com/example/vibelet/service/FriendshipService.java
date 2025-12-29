@@ -95,4 +95,8 @@ public class FriendshipService {
                 .map(f -> f.getStatus() == FriendshipStatus.PENDING)
                 .orElse(false);
     }
+
+    public FriendshipRepository getFriendshipRepository() {
+        return friendshipRepository;
+    }
 }

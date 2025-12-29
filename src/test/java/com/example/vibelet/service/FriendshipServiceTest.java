@@ -421,4 +421,9 @@ class FriendshipServiceTest {
 
         assertFalse(result);
     }
+
+    @Test
+    void getFriendshipRepository_ShouldReturnRepository() {
+        assertEquals(friendshipRepository, friendshipService.getFriendshipRepository());
+    }
 }

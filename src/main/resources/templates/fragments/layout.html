@@ -106,7 +106,9 @@
 
             <div class="mt-auto hidden lg:flex flex-col gap-2 border-[3px] border-black p-3 bg-white shadow-neo-sm">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 border-2 border-black bg-acid-blue"></div>
+                    <div class="w-10 h-10 border-2 border-black bg-acid-blue overflow-hidden">
+                        <img th:if="${currentUser != null && currentUser.avatarUrl != null}" th:src="${currentUser.avatarUrl}" class="w-full h-full object-cover">
+                    </div>
                     <div class="leading-none">
                         <p class="font-bold font-mono text-sm uppercase" th:text="${#authentication.name}">USER</p>
                         <p class="text-xs font-mono text-gray-500">ONLINE_//</p>

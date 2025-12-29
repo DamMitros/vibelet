@@ -125,7 +125,7 @@ public class VibeService {
         return vibeRepository.findByUserOrderByCreatedAtDesc(user, PageRequest.of(page, size));
     }
 
-    public void addComment(Long vibeId, String username, String content) {
+    public Comment addComment(Long vibeId, String username, String content) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Vibe vibe = vibeRepository.findById(vibeId)
@@ -137,7 +137,7 @@ public class VibeService {
         comment.setUser(user);
         comment.setVibe(vibe);
         comment.setContent(content);
-        commentRepository.save(comment);
+        return commentRepository.save(comment);
     }
 
     public void toggleLike(Long vibeId, String username) {

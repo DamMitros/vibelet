@@ -1,5 +1,6 @@
 package com.example.vibelet.controller;
 
+import com.example.vibelet.model.Comment;
 import com.example.vibelet.service.CommentService;
 import com.example.vibelet.service.VibeService;
 import org.springframework.http.ResponseEntity;
@@ -35,8 +36,15 @@ public class InteractionController {
             return ResponseEntity.badRequest().body("Content cannot be empty");
         }
 
-        vibeService.addComment(vibeId, principal.getName(), content);
-        return ResponseEntity.ok().build();
+        Comment comment = vibeService.addComment(vibeId, principal.getName(), content);
+
+        return ResponseEntity.ok(Map.of(
+                "id", comment.getId(),
+                "content", comment.getContent(),
+                "username", comment.getUser().getUsername(),
+                "userId", comment.getUser().getId(),
+                "createdAt", comment.getCreatedAt().toString()
+        ));
     }
 
     @PutMapping("/comments/{id}")

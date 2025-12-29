@@ -3,6 +3,7 @@ package com.example.vibelet.controller;
 import com.example.vibelet.dto.RegisterRequest;
 import com.example.vibelet.dto.UserSearchDto;
 import com.example.vibelet.model.*;
+import com.example.vibelet.repository.FriendshipRepository;
 import com.example.vibelet.repository.UserRepository;
 import com.example.vibelet.repository.VibeRepository;
 import com.example.vibelet.service.AuthService;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -39,6 +41,13 @@ public class WebController {
         this.friendshipService = friendshipService;
         this.vibeRepository = vibeRepository;
         this.userRepository = userRepository;
+    }
+
+    private void addCurrentUserToModel(Model model, Principal principal) {
+        if (principal != null) {
+            userRepository.findByUsername(principal.getName())
+                    .ifPresent(u -> model.addAttribute("currentUser", u));
+        }
     }
 
     @GetMapping("/")
@@ -83,6 +92,7 @@ public class WebController {
 
         model.addAttribute("vibes", vibePage.getContent());
         model.addAttribute("currentUser", currentUser);
+        model.addAttribute("currentUser", currentUser);
         return "vibes";
     }
 
@@ -104,6 +114,7 @@ public class WebController {
     @GetMapping("/friends")
     public String friends(Model model, Principal principal) {
         String username = principal.getName();
+        addCurrentUserToModel(model, principal);
         model.addAttribute("friends", friendshipService.getAcceptedFriendships(username));
         model.addAttribute("requests", friendshipService.getPendingRequests(username));
         return "friends";
@@ -124,6 +135,7 @@ public class WebController {
             results = userService.searchUsers(query, currentUser.getUsername());
         }
 
+        addCurrentUserToModel(model, principal);
         model.addAttribute("searchResults", results);
         return "explore";
     }
@@ -132,6 +144,7 @@ public class WebController {
     public String profile(Model model, Principal principal) {
         User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
         model.addAttribute("currentUser", currentUser);
+        model.addAttribute("friendCount", friendshipService.getAcceptedFriendships(currentUser.getUsername()).size());
         return "profile";
     }
 
@@ -148,16 +161,33 @@ public class WebController {
         model.addAttribute("vibes", vibeRepository.findByUserOrderByCreatedAtDesc(targetUser, PageRequest.of(0, 20)));
 
         String status = "NONE";
+        Long friendshipId = null;
+
         if (targetUser.getId().equals(currentUser.getId())) {
             status = "SELF";
         } else {
-            if (friendshipService.areFriends(currentUser, targetUser)) {
-                status = "FRIEND";
-            } else if (friendshipService.isPending(currentUser, targetUser)) {
-                status = "PENDING";
+            Optional<Friendship> friendshipOpt = friendshipService.getFriendshipRepository().findByRequesterAndReceiver(currentUser, targetUser);
+            if (friendshipOpt.isEmpty()) {
+                friendshipOpt = friendshipService.getFriendshipRepository().findByRequesterAndReceiver(targetUser, currentUser);
+            }
+
+            if (friendshipOpt.isPresent()) {
+                Friendship f = friendshipOpt.get();
+                friendshipId = f.getId();
+
+                if (f.getStatus() == FriendshipStatus.ACCEPTED) {
+                    status = "FRIEND";
+                } else if (f.getStatus() == FriendshipStatus.PENDING) {
+                    if (f.getRequester().getId().equals(currentUser.getId())) {
+                        status = "PENDING_SENT";
+                    } else {
+                        status = "PENDING_RECEIVED";
+                    }
+                }
             }
         }
         model.addAttribute("friendshipStatus", status);
+        model.addAttribute("friendshipId", friendshipId);
 
         return "user_profile";
     }

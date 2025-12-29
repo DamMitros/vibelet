@@ -47,9 +47,9 @@
                             </p>
 
                             <div class="flex gap-2">
-                                <button class="flex-1 border-[3px] border-black py-2 font-mono text-xs bg-off-white hover:bg-black hover:text-white transition">
+                                <a th:href="@{'/users/' + ${friend.id}}" class="flex-1 border-[3px] border-black py-2 font-mono text-xs bg-off-white hover:bg-black hover:text-white transition text-center flex items-center justify-center">
                                     PROFILE
-                                </button>
+                                </a>
                                 <button th:onclick="'removeFriend(' + ${friendship.id} + ')'" class="border-[3px] border-black w-10 flex items-center justify-center bg-red-500 text-white hover:bg-red-600 transition shadow-neo-hover">
                                     <i class="fa-solid fa-user-minus"></i>
                                 </button>
