@@ -2,63 +2,94 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::content})}">
     <head><title>SQUAD</title></head>
     <body>
-    <div th:fragment="content">
+        <div th:fragment="content">
 
-        <div th:if="${!requests.empty}" class="mb-12">
-            <div class="neo-box bg-acid-pink p-4 mb-4 transform -rotate-1 w-fit">
-                <h2 class="font-head text-2xl uppercase">INCOMING (<span th:text="${requests.size()}">0</span>)</h2>
-            </div>
-
-            <div class="space-y-4">
-                <div th:each="req : ${requests}" class="neo-box p-4 bg-white border-[3px] border-black flex justify-between items-center">
-                    <span class="font-mono text-xl font-bold" th:text="${req}">USERNAME</span>
-                    <div class="flex gap-3">
-                        <button class="bg-acid-green border-[3px] border-black px-4 py-2 hover:bg-green-400 font-head">
-                            ACCEPT
-                        </button>
-                        <button class="bg-red-500 text-white border-[3px] border-black px-4 py-2 hover:bg-red-600 font-head">
-                            NOPE
-                        </button>
-                    </div>
+            <div th:if="${!requests.empty}" class="mb-12">
+                <div class="neo-box bg-acid-pink p-4 mb-4 transform -rotate-1 w-fit">
+                    <h2 class="font-head text-2xl uppercase">INCOMING (<span th:text="${requests.size()}">0</span>)</h2>
                 </div>
-            </div>
-        </div>
 
-        <div>
-            <div class="neo-box bg-acid-blue p-4 mb-6 transform rotate-1 w-fit">
-                <h2 class="font-head text-2xl uppercase">THE SQUAD</h2>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div th:each="friend : ${friends}" class="neo-box p-0 bg-white relative group">
-                    <div class="h-24 bg-gray-100 border-b-[3px] border-black overflow-hidden">
-                        <div class="w-full h-full opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-                    </div>
-                    <div class="px-4 pb-4">
-                        <div class="w-16 h-16 border-[3px] border-black bg-acid-yellow -mt-8 mb-3 overflow-hidden">
-                        </div>
-                        <h3 class="font-head text-2xl truncate" th:text="${friend}">USERNAME</h3>
-                        <p class="font-mono text-xs text-gray-500 mb-4">VIBING SINCE 2025</p>
-
-                        <div class="flex gap-2">
-                            <button class="flex-1 border-[3px] border-black py-2 font-mono text-xs bg-off-white hover:bg-black hover:text-white transition">
-                                PROFILE
+                <div class="space-y-4">
+                    <div th:each="req : ${requests}" th:id="'request-' + ${req.id}" class="neo-box p-4 bg-white border-[3px] border-black flex justify-between items-center">
+                        <span class="font-mono text-xl font-bold" th:text="${req.requester.username}">USERNAME</span>
+                        <div class="flex gap-3">
+                            <button th:onclick="'acceptRequest(' + ${req.id} + ')'" class="bg-acid-green border-[3px] border-black px-4 py-2 hover:bg-green-400 font-head hover:shadow-neo-sm transition">
+                                ACCEPT
                             </button>
-                            <button class="border-[3px] border-black w-10 flex items-center justify-center bg-red-500 text-white hover:bg-red-600">
-                                <i class="fa-solid fa-user-minus"></i>
+                            <button th:onclick="'rejectRequest(' + ${req.id} + ')'" class="bg-red-500 text-white border-[3px] border-black px-4 py-2 hover:bg-red-600 font-head hover:shadow-neo-sm transition">
+                                NOPE
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div th:if="${friends.empty}" class="neo-box p-10 bg-off-white text-center mt-4">
-                <h3 class="font-head text-xl mb-2">ZERO FRIENDS?</h3>
-                <p class="font-mono text-sm mb-4">SAD. GO TO EXPLORE ZONE AND FIX IT.</p>
-                <a th:href="@{/explore}" class="neo-btn bg-acid-yellow text-black inline-block">FIND PEOPLE</a>
-            </div>
-        </div>
+            <div>
+                <div class="neo-box bg-acid-blue p-4 mb-6 transform rotate-1 w-fit">
+                    <h2 class="font-head text-2xl uppercase">THE SQUAD</h2>
+                </div>
 
-    </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div th:each="friendship : ${friends}"
+                         th:with="friend=${friendship.requester.username == #authentication.name ? friendship.receiver : friendship.requester}"
+                         class="neo-box p-0 bg-white relative group">
+
+                        <div class="h-24 bg-gray-100 border-b-[3px] border-black overflow-hidden">
+                            <div class="w-full h-full opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+                        </div>
+                        <div class="px-4 pb-4">
+                            <div class="w-16 h-16 border-[3px] border-black bg-acid-yellow -mt-8 mb-3 overflow-hidden">
+                                <img th:if="${friend.avatarUrl}" th:src="${friend.avatarUrl}" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="font-head text-2xl truncate" th:text="${friend.username}">USERNAME</h3>
+                            <p class="font-mono text-xs text-gray-500 mb-4">
+                                SINCE <span th:text="${#temporals.format(friendship.createdAt, 'yyyy-MM-dd')}">2025</span>
+                            </p>
+
+                            <div class="flex gap-2">
+                                <button class="flex-1 border-[3px] border-black py-2 font-mono text-xs bg-off-white hover:bg-black hover:text-white transition">
+                                    PROFILE
+                                </button>
+                                <button th:onclick="'removeFriend(' + ${friendship.id} + ')'" class="border-[3px] border-black w-10 flex items-center justify-center bg-red-500 text-white hover:bg-red-600 transition shadow-neo-hover">
+                                    <i class="fa-solid fa-user-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${friends.empty}" class="neo-box p-10 bg-off-white text-center mt-4">
+                    <h3 class="font-head text-xl mb-2">ZERO FRIENDS?</h3>
+                    <p class="font-mono text-sm mb-4">SAD. GO TO EXPLORE ZONE AND FIX IT.</p>
+                    <a th:href="@{/explore}" class="neo-btn bg-acid-yellow text-black inline-block">FIND PEOPLE</a>
+                </div>
+            </div>
+
+            <script>
+                async function acceptRequest(id) {
+                    if(!confirm("Accept this vibe?")) return;
+                    try {
+                        const res = await fetch(`/api/v1/friends/accept/${id}`, { method: 'PUT' });
+                        if(res.ok) location.reload();
+                    } catch (e) { console.error(e); }
+                }
+
+                async function rejectRequest(id) {
+                    if(!confirm("Reject?")) return;
+                    try {
+                        const res = await fetch(`/api/v1/friends/${id}`, { method: 'DELETE' });
+                        if(res.ok) location.reload();
+                    } catch (e) { console.error(e); }
+                }
+
+                async function removeFriend(id) {
+                    if(!confirm("Cut ties? Really?")) return;
+                    try {
+                        const res = await fetch(`/api/v1/friends/${id}`, { method: 'DELETE' });
+                        if(res.ok) location.reload();
+                    } catch (e) { console.error(e); }
+                }
+            </script>
+        </div>
     </body>
 </html>

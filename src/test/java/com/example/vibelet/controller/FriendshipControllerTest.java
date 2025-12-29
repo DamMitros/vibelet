@@ -1,6 +1,7 @@
 package com.example.vibelet.controller;
 
 import com.example.vibelet.model.Friendship;
+import com.example.vibelet.model.FriendshipStatus;
 import com.example.vibelet.model.User;
 import com.example.vibelet.service.FriendshipService;
 import org.junit.jupiter.api.Test;
@@ -38,14 +39,23 @@ class FriendshipControllerTest {
     @Test
     @WithMockUser(username = "me")
     void getFriends_ShouldReturnList() throws Exception {
-        User friend = new User();
-        friend.setUsername("friend");
+        User me = new User();
+        me.setUsername("me");
 
-        given(friendshipService.getFriendsList("me"))
-                .willReturn(List.of(friend));
+        User friendUser = new User();
+        friendUser.setUsername("friend");
+
+        Friendship friendship = new Friendship();
+        friendship.setRequester(me);
+        friendship.setReceiver(friendUser);
+        friendship.setStatus(FriendshipStatus.ACCEPTED);
+
+        given(friendshipService.getAcceptedFriendships("me"))
+                .willReturn(List.of(friendship));
 
         mockMvc.perform(get("/api/v1/friends"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value("friend"));
     }
 
     @Test
@@ -88,6 +98,6 @@ class FriendshipControllerTest {
 
         mockMvc.perform(get("/api/v1/friends/requests"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0]").value("john"));
+                .andExpect(jsonPath("$[0].requester.username").value("john"));
     }
 }

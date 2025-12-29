@@ -258,10 +258,10 @@ class FriendshipServiceTest {
         when(friendshipRepository.findAllFriendsOfUser(user))
                 .thenReturn(List.of(friendship));
 
-        List<User> result = friendshipService.getFriendsList("user");
+        List<Friendship> result = friendshipService.getAcceptedFriendships("user");
         assertAll(
                 ()->assertEquals(1, result.size()),
-                ()->assertEquals(friend, result.get(0))
+                ()->assertEquals(friendship, result.get(0))
         );
     }
 
@@ -281,10 +281,10 @@ class FriendshipServiceTest {
         when(friendshipRepository.findAllFriendsOfUser(user))
                 .thenReturn(List.of(friendship));
 
-        List<User> result = friendshipService.getFriendsList("user");
+        List<Friendship> result = friendshipService.getAcceptedFriendships("user");
         assertAll(
                 ()->assertEquals(1, result.size()),
-                ()->assertEquals(friend, result.get(0))
+                ()->assertEquals(friendship, result.get(0))
         );
     }
 
@@ -292,7 +292,133 @@ class FriendshipServiceTest {
     void getFriendsList_ShouldThrow_WhenUserNotFound() {
         when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () ->
-                friendshipService.getFriendsList("ghost")
+                friendshipService.getAcceptedFriendships("ghost")
         );
+    }
+
+    @Test
+    void areFriends_ShouldReturnTrue_WhenAccepted_User1ToUser2() {
+        User u1 = new User();
+        User u2 = new User();
+
+        Friendship friendship = new Friendship();
+        friendship.setStatus(FriendshipStatus.ACCEPTED);
+
+        when(friendshipRepository.findByRequesterAndReceiver(u1, u2))
+                .thenReturn(Optional.of(friendship));
+
+        boolean result = friendshipService.areFriends(u1, u2);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void areFriends_ShouldReturnTrue_WhenAccepted_User2ToUser1() {
+        User u1 = new User();
+        User u2 = new User();
+
+        Friendship friendship = new Friendship();
+        friendship.setStatus(FriendshipStatus.ACCEPTED);
+
+        when(friendshipRepository.findByRequesterAndReceiver(u1, u2))
+                .thenReturn(Optional.empty());
+        when(friendshipRepository.findByRequesterAndReceiver(u2, u1))
+                .thenReturn(Optional.of(friendship));
+
+        boolean result = friendshipService.areFriends(u1, u2);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void areFriends_ShouldReturnFalse_WhenPending() {
+        User u1 = new User();
+        User u2 = new User();
+
+        Friendship friendship = new Friendship();
+        friendship.setStatus(FriendshipStatus.PENDING);
+
+        when(friendshipRepository.findByRequesterAndReceiver(u1, u2))
+                .thenReturn(Optional.of(friendship));
+
+        boolean result = friendshipService.areFriends(u1, u2);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void areFriends_ShouldReturnFalse_WhenNoFriendship() {
+        User u1 = new User();
+        User u2 = new User();
+
+        when(friendshipRepository.findByRequesterAndReceiver(any(), any()))
+                .thenReturn(Optional.empty());
+
+        boolean result = friendshipService.areFriends(u1, u2);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void isPending_ShouldReturnTrue_WhenPending() {
+        User sender = new User();
+        User receiver = new User();
+
+        Friendship friendship = new Friendship();
+        friendship.setStatus(FriendshipStatus.PENDING);
+
+        when(friendshipRepository.findByRequesterAndReceiver(sender, receiver))
+                .thenReturn(Optional.of(friendship));
+
+        boolean result = friendshipService.isPending(sender, receiver);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void isPending_ShouldReturnFalse_WhenAccepted() {
+        User sender = new User();
+        User receiver = new User();
+
+        Friendship friendship = new Friendship();
+        friendship.setStatus(FriendshipStatus.ACCEPTED);
+
+        when(friendshipRepository.findByRequesterAndReceiver(sender, receiver))
+                .thenReturn(Optional.of(friendship));
+
+        boolean result = friendshipService.isPending(sender, receiver);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void isPending_ShouldReturnFalse_WhenNoFriendship() {
+        User sender = new User();
+        User receiver = new User();
+
+        when(friendshipRepository.findByRequesterAndReceiver(sender, receiver))
+                .thenReturn(Optional.empty());
+
+        boolean result = friendshipService.isPending(sender, receiver);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void areFriends_ShouldReturnFalse_WhenSecondDirectionExistsButNotAccepted() {
+        User u1 = new User();
+        User u2 = new User();
+
+        Friendship friendship = new Friendship();
+        friendship.setStatus(FriendshipStatus.PENDING);
+
+        when(friendshipRepository.findByRequesterAndReceiver(u1, u2))
+                .thenReturn(Optional.empty());
+        when(friendshipRepository.findByRequesterAndReceiver(u2, u1))
+                .thenReturn(Optional.of(friendship));
+
+        boolean result = friendshipService.areFriends(u1, u2);
+
+        assertFalse(result);
     }
 }

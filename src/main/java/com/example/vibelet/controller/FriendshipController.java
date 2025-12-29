@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/friends")
@@ -17,39 +18,34 @@ public class FriendshipController {
         this.friendshipService = friendshipService;
     }
 
-    @PostMapping("/request/{receiverId}")
-    public ResponseEntity<String> sendRequest(@PathVariable Long receiverId, Principal principal) {
-        friendshipService.sendFriendRequest(principal.getName(), receiverId);
-        return ResponseEntity.ok("Friend request sent.");
+    @PostMapping("/request/{userId}")
+    public ResponseEntity<?> sendRequest(@PathVariable Long userId, Principal principal) {
+        friendshipService.sendFriendRequest(principal.getName(), userId);
+        return ResponseEntity.ok("Request sent");
     }
 
     @PutMapping("/accept/{friendshipId}")
-    public ResponseEntity<String> acceptRequest(@PathVariable Long friendshipId, Principal principal) {
+    public ResponseEntity<?> acceptRequest(@PathVariable Long friendshipId, Principal principal) {
         friendshipService.acceptFriendRequest(principal.getName(), friendshipId);
-        return ResponseEntity.ok("Friend request accepted.");
+        return ResponseEntity.ok("Friendship accepted");
     }
 
     @DeleteMapping("/{friendshipId}")
-    public ResponseEntity<String> removeFriend(@PathVariable Long friendshipId, Principal principal) {
+    public ResponseEntity<?> removeFriend(@PathVariable Long friendshipId, Principal principal) {
         friendshipService.removeFriendOrRejectRequest(principal.getName(), friendshipId);
-        return ResponseEntity.ok("Relationship removed.");
-    }
-
-    @GetMapping("/requests")
-    public ResponseEntity<List<String>> getPendingRequests(Principal principal) {
-        List<String> requests = friendshipService.getPendingRequests(principal.getName())
-                .stream()
-                .map(f -> f.getRequester().getUsername())
-                .toList();
-        return ResponseEntity.ok(requests);
+        return ResponseEntity.ok("Removed");
     }
 
     @GetMapping
-    public ResponseEntity<List<String>> getFriends(Principal principal) {
-        List<String> friends = friendshipService.getFriendsList(principal.getName())
-                .stream()
-                .map(User::getUsername)
-                .toList();
-        return ResponseEntity.ok(friends);
+    public List<User> getFriends(Principal principal) {
+        String username = principal.getName();
+        return friendshipService.getAcceptedFriendships(username).stream()
+                .map(f -> f.getRequester().getUsername().equals(username) ? f.getReceiver() : f.getRequester())
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/requests")
+    public List<Friendship> getRequests(Principal principal) {
+        return friendshipService.getPendingRequests(principal.getName());
     }
 }

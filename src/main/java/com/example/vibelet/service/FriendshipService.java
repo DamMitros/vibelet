@@ -8,6 +8,7 @@ import com.example.vibelet.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FriendshipService {
@@ -75,14 +76,23 @@ public class FriendshipService {
         return friendshipRepository.findByReceiverAndStatus(user, FriendshipStatus.PENDING);
     }
 
-    public List<User> getFriendsList(String username) {
+    public List<Friendship> getAcceptedFriendships(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        return friendshipRepository.findAllFriendsOfUser(user);
+    }
 
-        List<Friendship> friendships = friendshipRepository.findAllFriendsOfUser(user);
+    public boolean areFriends(User user1, User user2) {
+        Optional<Friendship> f1 = friendshipRepository.findByRequesterAndReceiver(user1, user2);
+        if (f1.isPresent() && f1.get().getStatus() == FriendshipStatus.ACCEPTED) return true;
 
-        return friendships.stream()
-                .map(f -> f.getRequester().getId().equals(user.getId()) ? f.getReceiver() : f.getRequester())
-                .toList();
+        Optional<Friendship> f2 = friendshipRepository.findByRequesterAndReceiver(user2, user1);
+        return f2.isPresent() && f2.get().getStatus() == FriendshipStatus.ACCEPTED;
+    }
+
+    public boolean isPending(User sender, User receiver) {
+        return friendshipRepository.findByRequesterAndReceiver(sender, receiver)
+                .map(f -> f.getStatus() == FriendshipStatus.PENDING)
+                .orElse(false);
     }
 }

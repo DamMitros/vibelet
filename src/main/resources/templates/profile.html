@@ -2,76 +2,107 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::content})}">
     <head><title>YOUR PROFILE</title></head>
     <body>
-    <div th:fragment="content">
-        <div class="neo-box p-0 bg-white mb-10 relative">
-            <div class="h-32 bg-acid-green border-b-[3px] border-black pattern-dots"></div>
-            <div class="px-6 pb-6">
-                <div class="flex justify-between items-end -mt-12 mb-4">
-                    <div class="w-24 h-24 bg-acid-pink border-[3px] border-black overflow-hidden relative">
-                        <img th:if="${currentUser.avatarUrl}" th:src="${currentUser.avatarUrl}" class="w-full h-full object-cover">
-                        <div th:unless="${currentUser.avatarUrl}" class="w-full h-full flex items-center justify-center font-head text-4xl">?</div>
+        <div th:fragment="content">
+            <div class="neo-box p-0 bg-white mb-10 relative">
+                <div class="h-32 bg-acid-green border-b-[3px] border-black pattern-dots"></div>
+                <div class="px-6 pb-6">
+                    <div class="flex justify-between items-end -mt-12 mb-4">
+                        <div class="w-24 h-24 bg-acid-pink border-[3px] border-black overflow-hidden relative">
+                            <img th:if="${currentUser.avatarUrl}" th:src="${currentUser.avatarUrl}" class="w-full h-full object-cover">
+                            <div th:unless="${currentUser.avatarUrl}" class="w-full h-full flex items-center justify-center font-head text-4xl">?</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <form th:action="@{/api/v1/data/export}" method="get">
+                                <button class="bg-white border-[3px] border-black px-3 py-1 font-mono text-xs hover:bg-black hover:text-white transition shadow-[2px_2px_0px_0px_#000]">
+                                    JSON DUMP
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                    <div class="flex gap-2">
-                        <form th:action="@{/api/v1/data/export}" method="get">
-                            <button class="bg-white border-[3px] border-black px-3 py-1 font-mono text-xs hover:bg-black hover:text-white transition shadow-[2px_2px_0px_0px_#000]">
-                                JSON DUMP
-                            </button>
-                        </form>
+
+                    <h1 class="font-head text-4xl uppercase" th:text="${currentUser.username}">USERNAME</h1>
+                    <p class="font-mono text-sm bg-black text-white inline-block px-2 mb-4" th:text="${currentUser.email}">EMAIL</p>
+
+                    <div class="font-body text-lg border-[3px] border-black p-4 bg-off-white mb-6 relative">
+                        <i class="fa-solid fa-quote-right absolute -top-3 -right-3 bg-acid-yellow border-[3px] border-black p-1"></i>
+                        <span th:text="${currentUser.bio ?: 'NO BIO YET. BORING.'}">Bio goes here...</span>
                     </div>
-                </div>
 
-                <h1 class="font-head text-4xl uppercase" th:text="${currentUser.username}">USERNAME</h1>
-                <p class="font-mono text-sm bg-black text-white inline-block px-2 mb-4" th:text="${currentUser.email}">EMAIL</p>
-
-                <div class="font-body text-lg border-[3px] border-black p-4 bg-off-white mb-6 relative">
-                    <i class="fa-solid fa-quote-right absolute -top-3 -right-3 bg-acid-yellow border-[3px] border-black p-1"></i>
-                    <span th:text="${currentUser.bio ?: 'NO BIO YET. BORING.'}">Bio goes here...</span>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 font-mono text-center">
-                    <div class="border-[3px] border-black p-2 hover:bg-acid-blue transition">
-                        <span class="block text-2xl font-bold">12</span>
-                        <span class="text-xs">VIBES</span>
-                    </div>
-                    <div class="border-[3px] border-black p-2 hover:bg-acid-pink transition">
-                        <span class="block text-2xl font-bold">85</span>
-                        <span class="text-xs">SQUAD</span>
+                    <div class="grid grid-cols-2 gap-4 font-mono text-center">
+                        <div class="border-[3px] border-black p-2 hover:bg-acid-blue transition">
+                            <span class="block text-2xl font-bold" th:text="${currentUser.vibes.size()}">0</span>
+                            <span class="text-xs">VIBES</span>
+                        </div>
+                        <div class="border-[3px] border-black p-2 hover:bg-acid-pink transition">
+                            <span class="block text-2xl font-bold">--</span>
+                            <span class="text-xs">SQUAD</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="neo-box p-6 bg-acid-yellow relative mb-10">
-            <div class="absolute -top-4 left-4 bg-black text-white font-head px-4 py-1 border-[3px] border-black transform -rotate-1">
-                EDIT_MODE
+            <div class="neo-box p-6 bg-acid-yellow relative mb-10">
+                <div class="absolute -top-4 left-4 bg-black text-white font-head px-4 py-1 border-[3px] border-black transform -rotate-1">
+                    EDIT_MODE
+                </div>
+
+                <form onsubmit="updateProfile(event)" class="mt-4 space-y-4">
+                    <div>
+                        <label class="font-mono font-bold block mb-1">AVATAR URL</label>
+                        <input type="text" id="avatarUrl" th:value="${currentUser.avatarUrl}" class="w-full border-[3px] border-black p-2 font-mono bg-white focus:outline-none focus:shadow-neo-sm">
+                    </div>
+                    <div>
+                        <label class="font-mono font-bold block mb-1">BIO</label>
+                        <textarea id="bio" class="w-full border-[3px] border-black p-2 font-mono bg-white h-24 focus:outline-none focus:shadow-neo-sm" th:text="${currentUser.bio}"></textarea>
+                    </div>
+                    <div class="text-right">
+                        <button type="submit" class="neo-btn bg-white hover:bg-black hover:text-white">SAVE CHANGES</button>
+                    </div>
+                </form>
             </div>
 
-            <form th:action="@{/api/v1/users/me}" method="put" class="mt-4 space-y-4">
-                <!-- TODO: Trzeba będzie stworzyć mechanizm uploadu avatarów -->
-                <div>
-                    <label class="font-mono font-bold block mb-1">AVATAR URL</label>
-                    <input type="text" name="avatarUrl" th:value="${currentUser.avatarUrl}" class="w-full border-[3px] border-black p-2 font-mono bg-white focus:outline-none focus:shadow-neo-sm">
-                </div>
-                <div>
-                    <label class="font-mono font-bold block mb-1">BIO</label>
-                    <textarea name="bio" class="w-full border-[3px] border-black p-2 font-mono bg-white h-24 focus:outline-none focus:shadow-neo-sm" th:text="${currentUser.bio}"></textarea>
-                </div>
-                <div class="text-right">
-                    <button type="submit" class="neo-btn bg-white hover:bg-black hover:text-white">SAVE CHANGES</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="border-[3px] border-black p-6 bg-red-500 relative mt-12">
-            <div class="font-head text-2xl text-white mb-2">DANGER ZONE</div>
-            <p class="font-mono text-sm font-bold mb-4">ONCE YOU GO, YOU NEVER COME BACK.</p>
-            <form th:action="@{/api/v1/users/me}" method="delete">
-                <button type="submit" class="w-full border-[3px] border-black bg-white font-head py-3 hover:bg-black hover:text-white hover:border-white transition uppercase">
+            <div class="border-[3px] border-black p-6 bg-red-500 relative mt-12">
+                <div class="font-head text-2xl text-white mb-2">DANGER ZONE</div>
+                <p class="font-mono text-sm font-bold mb-4">ONCE YOU GO, YOU NEVER COME BACK.</p>
+                <button onclick="deleteAccount()" class="w-full border-[3px] border-black bg-white font-head py-3 hover:bg-black hover:text-white hover:border-white transition uppercase">
                     DELETE ACCOUNT
                 </button>
-            </form>
-        </div>
+            </div>
 
-    </div>
+            <script>
+                async function updateProfile(e) {
+                    e.preventDefault();
+                    const data = {
+                        avatarUrl: document.getElementById('avatarUrl').value,
+                        bio: document.getElementById('bio').value
+                    };
+
+                    try {
+                        const res = await fetch('/api/v1/users/me', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        if (res.ok) {
+                            window.location.reload();
+                        } else {
+                            alert("Failed to update profile.");
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+
+                async function deleteAccount() {
+                    if(!confirm("ARE YOU SURE? THIS IS FINAL.")) return;
+                    try {
+                        const res = await fetch('/api/v1/users/me', { method: 'DELETE' });
+                        if(res.ok) window.location.href = '/login?logout';
+                    } catch(e) { console.error(e); }
+                }
+            </script>
+
+        </div>
     </body>
 </html>

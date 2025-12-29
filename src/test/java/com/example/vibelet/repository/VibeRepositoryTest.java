@@ -21,7 +21,7 @@ class VibeRepositoryTest {
     private FriendshipRepository friendshipRepository;
 
     @Test
-    void findFeedForUser_ShouldReturnFriendsPostsAndMyPosts() {
+    void findFeedForUser_ShouldReturnFriendsPostsAndMyPostsAndPublicPosts() {
         User me = userRepository.save(new User("me", "me@test.com", "pass"));
         User friend = userRepository.save(new User("friend", "friend@test.com", "pass"));
         User stranger = userRepository.save(new User("stranger", "stranger@test.com", "pass"));
@@ -32,11 +32,11 @@ class VibeRepositoryTest {
         f.setStatus(FriendshipStatus.ACCEPTED);
         friendshipRepository.save(f);
 
-        Vibe myVibe = createVibe(me, "My vibe", PrivacyStatus.PUBLIC);
-        Vibe friendVibe = createVibe(friend, "Friend vibe", PrivacyStatus.FRIENDS_ONLY);
-
+        createVibe(me, "My vibe", PrivacyStatus.PUBLIC);
+        createVibe(friend, "Friend vibe", PrivacyStatus.FRIENDS_ONLY);
         createVibe(friend, "Secret vibe", PrivacyStatus.PRIVATE);
         createVibe(stranger, "Stranger vibe", PrivacyStatus.PUBLIC);
+
         Page<Vibe> feed = vibeRepository.findFeedForUser(
                 me,
                 FriendshipStatus.ACCEPTED,
@@ -44,9 +44,9 @@ class VibeRepositoryTest {
                 PageRequest.of(0, 10)
         );
 
-        assertThat(feed.getContent()).hasSize(2);
+        assertThat(feed.getContent()).hasSize(3);
         assertThat(feed.getContent()).extracting(Vibe::getContent)
-                .containsExactlyInAnyOrder("My vibe", "Friend vibe");
+                .containsExactlyInAnyOrder("My vibe", "Friend vibe", "Stranger vibe");
     }
 
     private Vibe createVibe(User user, String content, PrivacyStatus privacy) {

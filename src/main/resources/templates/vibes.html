@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::content})}">
+    <head><title>Vibe Let</title></head>
+    <body>
+        <div th:fragment="content">
+
+            <div class="neo-box p-6 mb-8 relative bg-white transform -rotate-1">
+                <div class="absolute -top-3 -left-3 bg-acid-green border-[3px] border-black px-2 py-1 font-mono text-xs font-bold shadow-neo-sm">
+                    NEW_TRANSMISSION
+                </div>
+                <form th:action="@{/vibes}" method="post" enctype="multipart/form-data">
+                    <textarea name="content" class="w-full bg-off-awhite border-[3px] border-black p-4 font-mono text-lg focus:outline-none focus:bg-white focus:shadow-neo-sm transition resize-none h-32 placeholder:text-gray-400" placeholder="WRITE SOMETHING LOUD..."></textarea>
+                    <div class="flex justify-between items-end mt-4">
+                        <div class="flex gap-2 items-center">
+                            <label class="w-10 h-10 border-[3px] border-black bg-acid-pink hover:bg-white hover:shadow-neo-sm transition flex items-center justify-center cursor-pointer">
+                                <i class="fa-solid fa-image"></i>
+                                <input type="file" name="file" class="hidden">
+                            </label>
+                            <select name="privacy" class="h-10 border-[3px] border-black bg-white px-2 font-mono text-xs font-bold cursor-pointer hover:bg-gray-100">
+                                <option value="PUBLIC">PUBLIC</option>
+                                <option value="FRIENDS_ONLY">FRIENDS</option>
+                                <option value="PRIVATE">PRIVATE</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="neo-btn bg-black text-white hover:bg-acid-yellow hover:text-black font-head p-2 border-2 border-black shadow-[4px_4px_0px_0px_#000]">
+                            SEND IT <i class="fa-solid fa-paper-plane ml-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="space-y-12">
+                <article class="neo-box p-0 bg-white rotate-random relative" th:each="vibe : ${vibes}" th:id="'vibe-' + ${vibe.id}">
+                    <div class="border-b-[3px] border-black p-4 flex justify-between items-center bg-off-white">
+                        <div class="flex items-center gap-3">
+                            <a th:href="@{'/users/' + ${vibe.user.id}}" class="block w-10 h-10 border-[3px] border-black bg-acid-yellow overflow-hidden hover:opacity-80 transition">
+                                <img th:if="${vibe.user.avatarUrl}" th:src="${vibe.user.avatarUrl}" class="w-full h-full object-cover">
+                                <div th:unless="${vibe.user.avatarUrl}" class="w-full h-full bg-acid-blue"></div>
+                            </a>
+                            <div>
+                                <a th:href="@{'/users/' + ${vibe.user.id}}" class="font-head text-lg leading-none hover:underline" th:text="${vibe.user.username}">USERNAME</a>
+                                <p class="font-mono text-xs bg-black text-white inline-block px-1 mt-1" th:text="${#temporals.format(vibe.createdAt, 'HH:mm dd-MM')}">DATE</p>
+                                <span class="font-mono text-[10px] border border-black px-1 ml-2" th:text="${vibe.privacyStatus}">PUBLIC</span>
+                            </div>
+                        </div>
+
+                        <div th:if="${vibe.user.username == #authentication.name}" class="flex gap-2">
+                            <button th:onclick="'enableEditVibe(' + ${vibe.id} + ')'" class="bg-white border-[3px] border-black px-2 py-1 font-mono text-xs hover:bg-acid-yellow transition shadow-neo-sm" title="Edit">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <form th:action="@{'/vibes/' + ${vibe.id} + '/delete'}" method="post" onsubmit="return confirm('DELETE THIS VIBE?');" class="inline">
+                                <button type="submit" class="bg-red-500 text-white border-[3px] border-black px-2 py-1 font-mono text-xs hover:bg-black transition shadow-neo-sm" title="Delete">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="p-4">
+                        <p th:id="'vibe-content-' + ${vibe.id}" class="font-body font-bold text-xl mb-4 leading-tight break-words" th:text="${vibe.content}">Content</p>
+
+                        <div th:id="'vibe-edit-' + ${vibe.id}" class="hidden mb-4">
+                            <textarea th:id="'vibe-edit-input-' + ${vibe.id}" class="w-full border-2 border-black p-2 font-mono bg-gray-100" rows="3" th:text="${vibe.content}"></textarea>
+                            <div class="flex gap-2 mt-2 justify-end">
+                                <button th:onclick="'cancelEditVibe(' + ${vibe.id} + ')'" class="text-xs font-mono border-2 border-black px-2 hover:bg-gray-200">CANCEL</button>
+                                <button th:onclick="'saveEditVibe(' + ${vibe.id} + ')'" class="text-xs font-mono border-2 border-black px-2 bg-acid-green hover:bg-green-400">SAVE</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-y-[3px] border-black relative group" th:if="${vibe.imageUrl}">
+                        <img th:src="@{'/uploads/' + ${vibe.imageUrl}}" class="w-full object-cover">
+                    </div>
+
+                    <div th:id="'comments-section-' + ${vibe.id}" class="hidden bg-gray-100 border-b-[3px] border-black p-4 text-sm font-mono">
+                        <div th:id="'comments-list-' + ${vibe.id}" class="space-y-2 mb-3">
+                            <div th:if="${!#lists.isEmpty(vibe.comments)}" th:each="comment : ${vibe.comments}" th:id="'comment-row-' + ${comment.id}" class="border-l-2 border-black pl-2 flex justify-between items-start bg-white p-2">
+                                <div class="flex-1 mr-2">
+                                    <a th:href="@{'/users/' + ${comment.user.id}}" class="font-bold hover:underline" th:text="${comment.user.username}">User</a>:
+                                    <span th:id="'comment-content-' + ${comment.id}" th:text="${comment.content}">Text</span>
+
+                                    <div th:id="'comment-edit-box-' + ${comment.id}" class="hidden mt-1">
+                                        <input type="text" th:id="'comment-edit-input-' + ${comment.id}" th:value="${comment.content}" class="w-full border border-black px-1 text-xs">
+                                        <div class="mt-1 flex gap-1">
+                                            <button th:onclick="'saveEditComment(' + ${comment.id} + ')'" class="bg-black text-white px-1 text-[10px]">SAVE</button>
+                                            <button th:onclick="'cancelEditComment(' + ${comment.id} + ')'" class="bg-gray-200 px-1 text-[10px]">CANCEL</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col items-end gap-1">
+                                    <span class="text-[10px] text-gray-500 whitespace-nowrap" th:text="${#temporals.format(comment.createdAt, 'HH:mm dd-MM')}">12:00</span>
+
+                                    <div th:if="${comment.user.username == #authentication.name}" class="flex gap-1">
+                                        <button th:onclick="'enableEditComment(' + ${comment.id} + ')'" class="text-[10px] hover:text-blue-600"><i class="fa-solid fa-pen"></i></button>
+                                        <button th:onclick="'deleteComment(' + ${comment.id} + ')'" class="text-[10px] hover:text-red-600"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 mt-2">
+                            <input type="text" th:id="'comment-input-' + ${vibe.id}" class="w-full border-2 border-black p-1 focus:outline-none" placeholder="SCREAM BACK...">
+                            <button th:onclick="'postComment(' + ${vibe.id} + ')'" class="bg-black text-white px-3 font-bold hover:bg-acid-yellow hover:text-black border-2 border-black transition">SEND</button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 flex gap-4 font-mono text-sm font-bold">
+                        <button th:onclick="'toggleLike(' + ${vibe.id} + ')'" class="flex-1 py-3 border-[3px] border-black flex items-center justify-center gap-2 hover:bg-acid-pink hover:shadow-neo-sm transition active:translate-y-1 active:shadow-none bg-white">
+                            <i th:id="'heart-icon-' + ${vibe.id}"
+                               class="fa-solid fa-heart transition duration-300"
+                               th:classappend="${#lists.contains(vibe.likes.![user.username], #authentication.name)} ? 'text-red-500' : ''">
+                            </i>
+                            <span th:id="'likes-count-' + ${vibe.id}" th:text="${vibe.likes.size()}">0</span> LIKES
+                        </button>
+                        <button th:onclick="'toggleComments(' + ${vibe.id} + ')'" class="flex-1 py-3 border-[3px] border-black flex items-center justify-center gap-2 hover:bg-acid-blue hover:shadow-neo-sm transition active:translate-y-1 active:shadow-none bg-white">
+                            <i class="fa-solid fa-comment"></i> <span th:id="'comments-count-' + ${vibe.id}" th:text="${vibe.comments.size()}">0</span> COMMENTS
+                        </button>
+                    </div>
+                </article>
+
+                <div th:if="${#lists.isEmpty(vibes)}" class="neo-box p-10 text-center bg-acid-yellow rotate-1">
+                    <h2 class="font-head text-3xl mb-2">DEAD SILENCE</h2>
+                    <p class="font-mono">No vibes here yet.</p>
+                </div>
+            </div>
+
+            <script th:inline="javascript">
+                const currentUsername = [[${#authentication.name}]];
+
+                function enableEditVibe(id) {
+                    document.getElementById(`vibe-content-${id}`).classList.add('hidden');
+                    document.getElementById(`vibe-edit-${id}`).classList.remove('hidden');
+                }
+                function cancelEditVibe(id) {
+                    document.getElementById(`vibe-content-${id}`).classList.remove('hidden');
+                    document.getElementById(`vibe-edit-${id}`).classList.add('hidden');
+                }
+                async function saveEditVibe(id) {
+                    const content = document.getElementById(`vibe-edit-input-${id}`).value;
+                    try {
+                        const res = await fetch(`/api/v1/vibes/${id}`, {
+                            method: 'PUT',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({content: content})
+                        });
+                        if(res.ok) {
+                            document.getElementById(`vibe-content-${id}`).innerText = content;
+                            cancelEditVibe(id);
+                        } else alert("Failed to update.");
+                    } catch(e) { console.error(e); }
+                }
+
+                function enableEditComment(id) {
+                    document.getElementById(`comment-content-${id}`).classList.add('hidden');
+                    document.getElementById(`comment-edit-box-${id}`).classList.remove('hidden');
+                }
+                function cancelEditComment(id) {
+                    document.getElementById(`comment-content-${id}`).classList.remove('hidden');
+                    document.getElementById(`comment-edit-box-${id}`).classList.add('hidden');
+                }
+                async function saveEditComment(id) {
+                    const content = document.getElementById(`comment-edit-input-${id}`).value;
+                    try {
+                        const res = await fetch(`/api/v1/comments/${id}`, {
+                            method: 'PUT',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({content: content})
+                        });
+                        if(res.ok) {
+                            document.getElementById(`comment-content-${id}`).innerText = content;
+                            cancelEditComment(id);
+                        }
+                    } catch(e) { console.error(e); }
+                }
+                async function deleteComment(id) {
+                    if(!confirm("Remove comment?")) return;
+                    try {
+                        const res = await fetch(`/api/v1/comments/${id}`, { method: 'DELETE' });
+                        if(res.ok) {
+                            document.getElementById(`comment-row-${id}`).remove();
+                        }
+                    } catch(e) { console.error(e); }
+                }
+
+                async function toggleLike(vibeId) {
+                    const icon = document.getElementById(`heart-icon-${vibeId}`);
+                    const count = document.getElementById(`likes-count-${vibeId}`);
+                    let isLiked = icon.classList.contains('text-red-500');
+
+                    icon.classList.toggle('text-red-500');
+                    count.innerText = parseInt(count.innerText) + (isLiked ? -1 : 1);
+
+                    try { await fetch(`/api/v1/interactions/vibe/${vibeId}/like`, { method: 'POST' }); }
+                    catch (e) { console.error(e); }
+                }
+
+                function toggleComments(vibeId) {
+                    document.getElementById(`comments-section-${vibeId}`).classList.toggle('hidden');
+                }
+
+                async function postComment(vibeId) {
+                    const input = document.getElementById(`comment-input-${vibeId}`);
+                    const list = document.getElementById(`comments-list-${vibeId}`);
+                    const countSpan = document.getElementById(`comments-count-${vibeId}`);
+                    const content = input.value;
+                    if (!content.trim()) return;
+
+                    try {
+                        const response = await fetch(`/api/v1/interactions/vibe/${vibeId}/comment`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ content: content })
+                        });
+
+                        if (response.ok) {
+                            location.reload();
+                        }
+                    } catch (e) { console.error(e); }
+                }
+            </script>
+
+        </div>
+    </body>
+</html>

@@ -16,13 +16,12 @@ public interface VibeRepository extends JpaRepository<Vibe, Long> {
 
     @Query("SELECT v FROM Vibe v WHERE " +
             "v.user = :user " +
-            "OR " +
-            "(" +
+            "OR (" +
             "  (v.user IN (SELECT f.receiver FROM Friendship f WHERE f.requester = :user AND f.status = :acceptedStatus) " +
-            "   OR " +
-            "   v.user IN (SELECT f.requester FROM Friendship f WHERE f.receiver = :user AND f.status = :acceptedStatus)) " +
-            "  AND v.privacyStatus <> :privateStatus " +
+            "   OR v.user IN (SELECT f.requester FROM Friendship f WHERE f.receiver = :user AND f.status = :acceptedStatus)) " +
+            "  AND v.privacyStatus <> :privateStatus" +
             ") " +
+            "OR v.privacyStatus = com.example.vibelet.model.PrivacyStatus.PUBLIC " +
             "ORDER BY v.createdAt DESC")
     Page<Vibe> findFeedForUser(
             @Param("user") User user,
@@ -32,5 +31,6 @@ public interface VibeRepository extends JpaRepository<Vibe, Long> {
     );
 
     Page<Vibe> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
+    long countByUser(User user);
     boolean existsByUserAndContentAndCreatedAt(User user, String content, LocalDateTime createdAt);
 }

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::content})}">
+    <head><title>USER PROFILE</title></head>
+    <body>
+        <div th:fragment="content">
+
+            <div class="neo-box p-0 bg-white mb-10 relative">
+                <div class="h-32 bg-acid-purple border-b-[3px] border-black pattern-diagonal"></div>
+                <div class="px-6 pb-6">
+                    <div class="flex justify-between items-end -mt-12 mb-4">
+                        <div class="w-24 h-24 bg-acid-yellow border-[3px] border-black overflow-hidden relative">
+                            <img th:if="${targetUser.avatarUrl}" th:src="${targetUser.avatarUrl}" class="w-full h-full object-cover">
+                            <div th:unless="${targetUser.avatarUrl}" class="w-full h-full flex items-center justify-center font-head text-4xl">?</div>
+                        </div>
+
+                        <div th:switch="${friendshipStatus}">
+                            <div th:case="'SELF'">
+                                <a th:href="@{/profile}" class="neo-btn bg-gray-200 hover:bg-black hover:text-white transition">EDIT PROFILE</a>
+                            </div>
+                            <div th:case="'NONE'">
+                                <button th:onclick="'sendRequest(' + ${targetUser.id} + ')'" class="neo-btn bg-acid-green hover:shadow-neo-sm">
+                                    <i class="fa-solid fa-user-plus mr-2"></i> ADD FRIEND
+                                </button>
+                            </div>
+                            <div th:case="'PENDING'">
+                                <button class="neo-btn bg-gray-300 cursor-not-allowed">
+                                    <i class="fa-solid fa-clock mr-2"></i> REQUEST SENT
+                                </button>
+                            </div>
+                            <div th:case="'FRIEND'">
+                                <button th:onclick="'removeFriend(' + ${targetUser.id} + ')'" class="neo-btn bg-red-500 text-white hover:bg-black">
+                                    <i class="fa-solid fa-user-minus mr-2"></i> UNFRIEND
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h1 class="font-head text-4xl uppercase" th:text="${targetUser.username}">USERNAME</h1>
+
+                    <div class="flex gap-6 mt-4 font-mono text-sm border-b-[3px] border-black pb-4 mb-4">
+                        <div><span class="font-bold text-xl" th:text="${vibeCount}">0</span> VIBES</div>
+                        <div><span class="font-bold text-xl" th:text="${friendCount}">0</span> FRIENDS</div>
+                    </div>
+
+                    <div class="font-body text-lg border-[3px] border-black p-4 bg-off-white my-6 relative">
+                        <span th:text="${targetUser.bio ?: 'NO DATA.'}">Bio...</span>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="font-head text-2xl mb-6 border-b-[3px] border-black inline-block bg-acid-yellow px-2">TRANSMISSIONS_LOG</h2>
+
+            <div class="space-y-12">
+                <article class="neo-box p-0 bg-white" th:each="vibe : ${vibes}" th:id="'vibe-' + ${vibe.id}">
+                    <div class="border-b-[3px] border-black p-4 flex justify-between items-center bg-off-white">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 border-2 border-black bg-acid-yellow overflow-hidden">
+                                <img th:if="${vibe.user.avatarUrl}" th:src="${vibe.user.avatarUrl}" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <span class="font-head text-sm" th:text="${vibe.user.username}">USERNAME</span>
+                                <span class="font-mono text-xs text-gray-500 ml-2" th:text="${#temporals.format(vibe.createdAt, 'HH:mm dd-MM')}">DATE</span>
+                                <span class="font-mono text-[10px] border border-black px-1 ml-1" th:text="${vibe.privacyStatus}">PUBLIC</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4">
+                        <p class="font-body font-bold text-xl mb-4 leading-tight" th:text="${vibe.content}">Content</p>
+                    </div>
+
+                    <div class="border-y-[3px] border-black" th:if="${vibe.imageUrl}">
+                        <img th:src="@{'/uploads/' + ${vibe.imageUrl}}" class="w-full object-cover">
+                    </div>
+
+                    <div th:id="'comments-section-' + ${vibe.id}" class="hidden bg-gray-100 border-b-[3px] border-black p-4 text-sm font-mono">
+                        <div class="space-y-2 mb-3">
+                            <div th:if="${!#lists.isEmpty(vibe.comments)}" th:each="comment : ${vibe.comments}" class="border-l-2 border-black pl-2">
+                                <span class="font-bold" th:text="${comment.user.username}">User</span>: <span th:text="${comment.content}">Text</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" th:id="'comment-input-' + ${vibe.id}" class="w-full border-2 border-black p-1" placeholder="REPLY...">
+                            <button th:onclick="'postComment(' + ${vibe.id} + ')'" class="bg-black text-white px-2 font-bold">SEND</button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 flex gap-4 font-mono text-sm font-bold">
+                        <button th:onclick="'toggleLike(' + ${vibe.id} + ')'" class="flex-1 py-2 border-[3px] border-black flex items-center justify-center gap-2 hover:bg-acid-pink transition bg-white">
+                            <i th:id="'heart-icon-' + ${vibe.id}"
+                               class="fa-solid fa-heart transition"
+                               th:classappend="${#lists.contains(vibe.likes.![user.username], #authentication.name)} ? 'text-red-500' : ''">
+                            </i>
+                            <span th:id="'likes-count-' + ${vibe.id}" th:text="${vibe.likes.size()}">0</span>
+                        </button>
+                        <button th:onclick="'toggleComments(' + ${vibe.id} + ')'" class="flex-1 py-2 border-[3px] border-black flex items-center justify-center gap-2 hover:bg-acid-blue transition bg-white">
+                            <i class="fa-solid fa-comment"></i> <span th:text="${vibe.comments.size()}">0</span>
+                        </button>
+                    </div>
+                </article>
+
+                <div th:if="${#lists.isEmpty(vibes)}" class="p-6 border-2 border-dashed border-black text-center font-mono text-gray-500">
+                    USER HAS NOT SCREAMED INTO THE VOID YET.
+                </div>
+            </div>
+
+            <script th:inline="javascript">
+                async function sendRequest(userId) {
+                    try {
+                        const res = await fetch(`/api/v1/friends/request/${userId}`, { method: 'POST' });
+                        if (res.ok) location.reload();
+                    } catch (e) { console.error(e); }
+                }
+
+                async function removeFriend(userId) {
+                    if(!confirm("Unfriend?")) return;
+                    alert("Backend endpoint for unfriending via User ID needed. Check InteractionController.");
+                }
+
+                async function toggleLike(vibeId) {
+                    const icon = document.getElementById(`heart-icon-${vibeId}`);
+                    const count = document.getElementById(`likes-count-${vibeId}`);
+                    let isLiked = icon.classList.contains('text-red-500');
+                    icon.classList.toggle('text-red-500');
+                    count.innerText = parseInt(count.innerText) + (isLiked ? -1 : 1);
+                    await fetch(`/api/v1/interactions/vibe/${vibeId}/like`, { method: 'POST' });
+                }
+
+                function toggleComments(vibeId) {
+                    document.getElementById(`comments-section-${vibeId}`).classList.toggle('hidden');
+                }
+
+                async function postComment(vibeId) {
+                    const input = document.getElementById(`comment-input-${vibeId}`);
+                    if (!input.value.trim()) return;
+                    const res = await fetch(`/api/v1/interactions/vibe/${vibeId}/comment`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: input.value })
+                    });
+                    if (res.ok) location.reload();
+                }
+            </script>
+
+        </div>
+    </body>
+</html>

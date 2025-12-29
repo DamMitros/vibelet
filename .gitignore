@@ -1,6 +1,7 @@
 /uploads
 .env
 .env.local
+notes.txt
 
 HELP.md
 .gradle

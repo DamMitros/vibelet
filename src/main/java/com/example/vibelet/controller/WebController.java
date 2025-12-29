@@ -2,14 +2,16 @@ package com.example.vibelet.controller;
 
 import com.example.vibelet.dto.RegisterRequest;
 import com.example.vibelet.dto.UserSearchDto;
-import com.example.vibelet.model.PrivacyStatus;
-import com.example.vibelet.model.User;
+import com.example.vibelet.model.*;
 import com.example.vibelet.repository.UserRepository;
+import com.example.vibelet.repository.VibeRepository;
 import com.example.vibelet.service.AuthService;
 import com.example.vibelet.service.FriendshipService;
 import com.example.vibelet.service.UserService;
 import com.example.vibelet.service.VibeService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -17,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,22 +29,21 @@ public class WebController {
     private final UserService userService;
     private final AuthService authService;
     private final FriendshipService friendshipService;
+    private final VibeRepository vibeRepository;
     private final UserRepository userRepository;
 
-    public WebController(VibeService vibeService, UserService userService, AuthService authService, FriendshipService friendshipService, UserRepository userRepository) {
+    public WebController(VibeService vibeService, UserService userService, AuthService authService, FriendshipService friendshipService, VibeRepository vibeRepository, UserRepository userRepository) {
         this.vibeService = vibeService;
         this.userService = userService;
         this.authService = authService;
         this.friendshipService = friendshipService;
+        this.vibeRepository = vibeRepository;
         this.userRepository = userRepository;
     }
 
     @GetMapping("/")
     public String index(Principal principal) {
-        if (principal != null) {
-            return "redirect:/feed";
-        }
-        return "redirect:/login";
+        return principal != null ? "redirect:/vibes" : "redirect:/login";
     }
 
     @GetMapping("/login")
@@ -71,11 +71,19 @@ public class WebController {
         }
     }
 
-    @GetMapping("/feed")
-    public String feed(Model model, Principal principal, @RequestParam(defaultValue = "0") int page) {
-        String username = principal.getName();
-        model.addAttribute("vibes", vibeService.getFeed(username, page, 20));
-        return "feed";
+    @GetMapping("/vibes")
+    public String feed(Model model, Principal principal) {
+        User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
+        Page<Vibe> vibePage = vibeRepository.findFeedForUser(
+                currentUser,
+                FriendshipStatus.ACCEPTED,
+                PrivacyStatus.PRIVATE,
+                PageRequest.of(0, 50)
+        );
+
+        model.addAttribute("vibes", vibePage.getContent());
+        model.addAttribute("currentUser", currentUser);
+        return "vibes";
     }
 
     @PostMapping("/vibes")
@@ -84,51 +92,73 @@ public class WebController {
                              @RequestParam("privacy") PrivacyStatus privacy,
                              Principal principal) {
         vibeService.createVibe(principal.getName(), content, file, privacy);
-        return "redirect:/feed";
+        return "redirect:/vibes";
     }
 
     @PostMapping("/vibes/{id}/delete")
     public String deleteVibe(@PathVariable Long id, Principal principal) {
         vibeService.deleteVibe(id, principal.getName());
-        return "redirect:/feed";
-    }
-
-    @GetMapping("/profile")
-    public String profile(Model model, Principal principal) {
-        User currentUser = userRepository.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        model.addAttribute("currentUser", currentUser);
-        return "profile";
-    }
-
-    @GetMapping("/explore")
-    public String explore(@RequestParam(required = false) String query, Model model, Principal principal) {
-        if (query != null && !query.isBlank()) {
-            List<UserSearchDto> results = userService.searchUsers(query, principal.getName());
-            model.addAttribute("searchResults", results);
-        } else {
-            model.addAttribute("searchResults", Collections.emptyList());
-        }
-        return "explore";
+        return "redirect:/vibes";
     }
 
     @GetMapping("/friends")
     public String friends(Model model, Principal principal) {
         String username = principal.getName();
-
-        List<String> friends = friendshipService.getFriendsList(username)
-                .stream()
-                .map(User::getUsername)
-                .collect(Collectors.toList());
-
-        List<String> requests = friendshipService.getPendingRequests(username)
-                .stream()
-                .map(f -> f.getRequester().getUsername())
-                .collect(Collectors.toList());
-
-        model.addAttribute("friends", friends);
-        model.addAttribute("requests", requests);
-
+        model.addAttribute("friends", friendshipService.getAcceptedFriendships(username));
+        model.addAttribute("requests", friendshipService.getPendingRequests(username));
         return "friends";
+    }
+
+    @GetMapping("/explore")
+    public String explore(@RequestParam(required = false) String query, Model model, Principal principal) {
+        User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
+        List<UserSearchDto> results;
+
+        if (query == null || query.isBlank()) {
+            Page<User> usersPage = userRepository.findAll(PageRequest.of(0, 20));
+            results = usersPage.stream()
+                    .filter(u -> !u.getId().equals(currentUser.getId()))
+                    .map(u -> userService.mapToSearchDto(u, currentUser))
+                    .collect(Collectors.toList());
+        } else {
+            results = userService.searchUsers(query, currentUser.getUsername());
+        }
+
+        model.addAttribute("searchResults", results);
+        return "explore";
+    }
+
+    @GetMapping("/profile")
+    public String profile(Model model, Principal principal) {
+        User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
+        model.addAttribute("currentUser", currentUser);
+        return "profile";
+    }
+
+    @GetMapping("/users/{id}")
+    public String userProfile(@PathVariable Long id, Model model, Principal principal) {
+        User targetUser = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
+
+        model.addAttribute("targetUser", targetUser);
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("vibeCount", vibeRepository.countByUser(targetUser));
+        model.addAttribute("friendCount", friendshipService.getAcceptedFriendships(targetUser.getUsername()).size());
+        model.addAttribute("vibes", vibeRepository.findByUserOrderByCreatedAtDesc(targetUser, PageRequest.of(0, 20)));
+
+        String status = "NONE";
+        if (targetUser.getId().equals(currentUser.getId())) {
+            status = "SELF";
+        } else {
+            if (friendshipService.areFriends(currentUser, targetUser)) {
+                status = "FRIEND";
+            } else if (friendshipService.isPending(currentUser, targetUser)) {
+                status = "PENDING";
+            }
+        }
+        model.addAttribute("friendshipStatus", status);
+
+        return "user_profile";
     }
 }

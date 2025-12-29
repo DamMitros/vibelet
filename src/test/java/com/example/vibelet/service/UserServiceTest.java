@@ -147,4 +147,14 @@ class UserServiceTest {
 
         assertEquals("PENDING", results.stream().filter(u -> u.getUsername().equals("pending")).findFirst().get().getFriendshipStatus());
     }
+
+    @Test
+    void getCurrentUser_ShouldReturnUser() {
+        String username = "current";
+        User user = new User(); user.setUsername(username);
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+
+        User result = userService.getCurrentUser(username);
+        assertEquals(username, result.getUsername());
+    }
 }
