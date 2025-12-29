@@ -9,7 +9,15 @@
                 <div class="px-6 pb-6">
                     <div class="flex justify-between items-end -mt-12 mb-4">
                         <div class="w-24 h-24 bg-acid-yellow border-[3px] border-black overflow-hidden relative">
-                            <img th:if="${targetUser.avatarUrl}" th:src="${targetUser.avatarUrl}" class="w-full h-full object-cover">
+                            <div class="w-24 h-24 bg-acid-pink border-[3px] border-black overflow-hidden relative">
+                                <img th:if="${targetUser.avatarUrl != null and #strings.startsWith(targetUser.avatarUrl, 'http')}"
+                                     th:src="${targetUser.avatarUrl}" class="w-full h-full object-cover">
+
+                                <img th:if="${targetUser.avatarUrl != null and !#strings.startsWith(targetUser.avatarUrl, 'http')}"
+                                     th:src="@{'/uploads/' + ${targetUser.avatarUrl}}" class="w-full h-full object-cover">
+
+                                <div th:if="${targetUser.avatarUrl == null}" class="w-full h-full flex items-center justify-center font-head text-4xl">?</div>
+                            </div>
                             <div th:unless="${targetUser.avatarUrl}" class="w-full h-full flex items-center justify-center font-head text-4xl">?</div>
                         </div>
 

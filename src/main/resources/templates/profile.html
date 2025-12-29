@@ -8,15 +8,19 @@
                 <div class="px-6 pb-6">
                     <div class="flex justify-between items-end -mt-12 mb-4">
                         <div class="w-24 h-24 bg-acid-pink border-[3px] border-black overflow-hidden relative">
-                            <img th:if="${currentUser.avatarUrl}" th:src="${currentUser.avatarUrl}" class="w-full h-full object-cover">
-                            <div th:unless="${currentUser.avatarUrl}" class="w-full h-full flex items-center justify-center font-head text-4xl">?</div>
+                            <img th:if="${currentUser.avatarUrl != null and #strings.startsWith(currentUser.avatarUrl, 'http')}"
+                                 th:src="${currentUser.avatarUrl}" class="w-full h-full object-cover">
+                            <img th:if="${currentUser.avatarUrl != null and !#strings.startsWith(currentUser.avatarUrl, 'http')}"
+                                 th:src="@{'/uploads/' + ${currentUser.avatarUrl}}" class="w-full h-full object-cover">
+                            <div th:if="${currentUser.avatarUrl == null}" class="w-full h-full flex items-center justify-center font-head text-4xl">?</div>
                         </div>
                         <div class="flex gap-2">
-                            <form th:action="@{/api/v1/data/export}" method="get">
-                                <button class="bg-white border-[3px] border-black px-3 py-1 font-mono text-xs hover:bg-black hover:text-white transition shadow-[2px_2px_0px_0px_#000]">
-                                    JSON DUMP
-                                </button>
-                            </form>
+                            <a href="#data-zone" class="bg-white border-[3px] border-black px-3 py-1 font-mono text-xs hover:bg-acid-blue transition shadow-[2px_2px_0px_0px_#000]">
+                                DATA_ZONE
+                            </a>
+                            <a href="#danger-zone" class="bg-white border-[3px] border-black px-3 py-1 font-mono text-xs hover:bg-red-500 hover:text-white transition shadow-[2px_2px_0px_0px_#000]">
+                                DANGER
+                            </a>
                         </div>
                     </div>
 
@@ -25,7 +29,7 @@
 
                     <div class="font-body text-lg border-[3px] border-black p-4 bg-off-white mb-6 relative">
                         <i class="fa-solid fa-quote-right absolute -top-3 -right-3 bg-acid-yellow border-[3px] border-black p-1"></i>
-                        <span th:text="${currentUser.bio ?: 'NO BIO YET. BORING.'}">Bio goes here...</span>
+                        <span th:text="${currentUser.bio ?: 'NO BIO YET. BORING.'}">Bio...</span>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4 font-mono text-center">
@@ -41,27 +45,92 @@
                 </div>
             </div>
 
-            <div class="neo-box p-6 bg-acid-yellow relative mb-10">
+            <div class="neo-box p-6 bg-acid-yellow relative mb-12">
                 <div class="absolute -top-4 left-4 bg-black text-white font-head px-4 py-1 border-[3px] border-black transform -rotate-1">
-                    EDIT_MODE
+                    EDIT_PROFILE
                 </div>
-
-                <form onsubmit="updateProfile(event)" class="mt-4 space-y-4">
+                <form id="profileForm" class="mt-4 space-y-4">
                     <div>
-                        <label class="font-mono font-bold block mb-1">AVATAR URL</label>
-                        <input type="text" id="avatarUrl" th:value="${currentUser.avatarUrl}" class="w-full border-[3px] border-black p-2 font-mono bg-white focus:outline-none focus:shadow-neo-sm">
+                        <label class="font-mono font-bold block mb-1">AVATAR (UPLOAD OR URL)</label>
+                        <div class="flex gap-2 flex-col md:flex-row">
+                            <input type="file" name="file" class="bg-white border-[3px] border-black p-2 font-mono text-sm w-full">
+                            <div class="font-mono font-bold py-2 text-center">OR</div>
+                            <input type="text" name="avatarUrl" th:value="${currentUser.avatarUrl}" placeholder="https://..." class="w-full border-[3px] border-black p-2 font-mono bg-white focus:outline-none">
+                        </div>
                     </div>
                     <div>
                         <label class="font-mono font-bold block mb-1">BIO</label>
-                        <textarea id="bio" class="w-full border-[3px] border-black p-2 font-mono bg-white h-24 focus:outline-none focus:shadow-neo-sm" th:text="${currentUser.bio}"></textarea>
+                        <textarea name="bio" class="w-full border-[3px] border-black p-2 font-mono bg-white h-24 focus:outline-none" th:text="${currentUser.bio}"></textarea>
                     </div>
                     <div class="text-right">
-                        <button type="submit" class="neo-btn bg-white hover:bg-black hover:text-white">SAVE CHANGES</button>
+                        <button type="button" onclick="submitProfileUpdate()" class="neo-btn bg-white hover:bg-black hover:text-white">SAVE INFO</button>
                     </div>
                 </form>
             </div>
 
-            <div class="border-[3px] border-black p-6 bg-red-500 relative mt-12">
+            <div class="neo-box p-6 bg-acid-blue relative mb-12">
+                <div class="absolute -top-4 right-4 bg-black text-white font-head px-4 py-1 border-[3px] border-black transform rotate-1">
+                    SECURITY_ZONE
+                </div>
+                <form onsubmit="updateSecurity(event)" class="mt-4 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="font-mono font-bold block mb-1">NEW USERNAME</label>
+                            <input type="text" id="sec-username" class="w-full border-[3px] border-black p-2 font-mono bg-white">
+                        </div>
+                        <div>
+                            <label class="font-mono font-bold block mb-1">NEW EMAIL</label>
+                            <input type="email" id="sec-email" class="w-full border-[3px] border-black p-2 font-mono bg-white">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="font-mono font-bold block mb-1">NEW PASSWORD</label>
+                        <input type="password" id="sec-new-pass" class="w-full border-[3px] border-black p-2 font-mono bg-white">
+                    </div>
+
+                    <div class="border-t-[3px] border-black border-dashed my-4"></div>
+
+                    <div class="bg-white p-4 border-[3px] border-black">
+                        <label class="font-mono font-bold block mb-1 text-red-600">CONFIRM WITH CURRENT PASSWORD *</label>
+                        <input type="password" id="sec-curr-pass" required class="w-full border-[3px] border-black p-2 font-mono bg-gray-100">
+                    </div>
+
+                    <div class="text-right">
+                        <button type="submit" class="neo-btn bg-white hover:bg-black hover:text-white">UPDATE SECRETS</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="data-zone" class="neo-box p-6 bg-gray-200 relative mb-12">
+                <div class="absolute -top-4 left-4 bg-black text-white font-head px-4 py-1 border-[3px] border-black transform -rotate-1">
+                    DATA_ZONE
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                    <div>
+                        <h3 class="font-head text-xl mb-2">TAKE IT</h3>
+                        <p class="font-mono text-xs mb-2">DOWNLOAD YOUR ENTIRE EXISTENCE AS JSON.</p>
+                        <form th:action="@{/api/v1/data/export}" method="get">
+                            <button class="w-full bg-white border-[3px] border-black px-4 py-2 font-head hover:bg-acid-green transition shadow-neo-sm">
+                                DOWNLOAD JSON <i class="fa-solid fa-download ml-2"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <div>
+                        <h3 class="font-head text-xl mb-2">RESTORE IT</h3>
+                        <p class="font-mono text-xs mb-2">UPLOAD JSON TO RESTORE VIBES & SQUAD.</p>
+                        <div class="flex gap-2">
+                            <input type="file" id="importFile" accept=".json" class="w-full bg-white border-[3px] border-black p-1 font-mono text-xs">
+                            <button onclick="importData()" class="bg-black text-white px-3 border-[3px] border-black font-bold hover:bg-white hover:text-black transition">
+                                <i class="fa-solid fa-upload"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="danger-zone" class="border-[3px] border-black p-6 bg-red-500 relative">
                 <div class="font-head text-2xl text-white mb-2">DANGER ZONE</div>
                 <p class="font-mono text-sm font-bold mb-4">ONCE YOU GO, YOU NEVER COME BACK.</p>
                 <button onclick="deleteAccount()" class="w-full border-[3px] border-black bg-white font-head py-3 hover:bg-black hover:text-white hover:border-white transition uppercase">
@@ -70,39 +139,74 @@
             </div>
 
             <script>
-                async function updateProfile(e) {
-                    e.preventDefault();
-                    const data = {
-                        avatarUrl: document.getElementById('avatarUrl').value,
-                        bio: document.getElementById('bio').value
-                    };
+                async function submitProfileUpdate() {
+                    const form = document.getElementById('profileForm');
+                    const formData = new FormData(form);
 
                     try {
                         const res = await fetch('/api/v1/users/me', {
                             method: 'PUT',
+                            body: formData
+                        });
+                        if (res.ok) window.location.reload();
+                        else alert("Update failed.");
+                    } catch (err) { console.error(err); }
+                }
+
+                async function updateSecurity(e) {
+                    e.preventDefault();
+                    const data = {
+                        newUsername: document.getElementById('sec-username').value,
+                        newEmail: document.getElementById('sec-email').value,
+                        newPassword: document.getElementById('sec-new-pass').value,
+                        currentPassword: document.getElementById('sec-curr-pass').value
+                    };
+
+                    try {
+                        const res = await fetch('/api/v1/users/me/security', {
+                            method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(data)
                         });
-
                         if (res.ok) {
-                            window.location.reload();
+                            alert("Secrets updated. Please login again.");
+                            window.location.href = '/logout';
                         } else {
-                            alert("Failed to update profile.");
+                            alert("Failed. Check password or duplicates.");
                         }
-                    } catch (err) {
-                        console.error(err);
-                    }
+                    } catch (err) { console.error(err); }
+                }
+
+                async function importData() {
+                    const fileInput = document.getElementById('importFile');
+                    if (!fileInput.files[0]) return alert("SELECT FILE FIRST.");
+
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            const jsonData = JSON.parse(e.target.result);
+                            const res = await fetch('/api/v1/data/import', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(jsonData)
+                            });
+                            if (res.ok) {
+                                alert("RESTORED SUCCESSFULLY.");
+                                location.reload();
+                            } else alert("IMPORT FAILED.");
+                        } catch (err) { console.error(err); alert("INVALID JSON."); }
+                    };
+                    reader.readAsText(fileInput.files[0]);
                 }
 
                 async function deleteAccount() {
-                    if(!confirm("ARE YOU SURE? THIS IS FINAL.")) return;
+                    if(!confirm("FINAL WARNING. DELETE?")) return;
                     try {
                         const res = await fetch('/api/v1/users/me', { method: 'DELETE' });
                         if(res.ok) window.location.href = '/login?logout';
                     } catch(e) { console.error(e); }
                 }
             </script>
-
         </div>
     </body>
 </html>

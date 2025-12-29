@@ -106,8 +106,17 @@
 
             <div class="mt-auto hidden lg:flex flex-col gap-2 border-[3px] border-black p-3 bg-white shadow-neo-sm">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 border-2 border-black bg-acid-blue overflow-hidden">
-                        <img th:if="${currentUser != null && currentUser.avatarUrl != null}" th:src="${currentUser.avatarUrl}" class="w-full h-full object-cover">
+                    <div class="w-10 h-10 border-2 border-black bg-acid-blue overflow-hidden relative">
+                        <img th:if="${currentUser?.avatarUrl != null and #strings.startsWith(currentUser.avatarUrl, 'http')}"
+                             th:src="${currentUser.avatarUrl}" class="w-full h-full object-cover">
+
+                        <img th:if="${currentUser?.avatarUrl != null and !#strings.startsWith(currentUser.avatarUrl, 'http')}"
+                             th:src="@{'/uploads/' + ${currentUser.avatarUrl}}" class="w-full h-full object-cover">
+
+                        <div th:if="${currentUser?.avatarUrl == null}"
+                             class="w-full h-full flex items-center justify-center font-head text-xl cursor-default">
+                            ?
+                        </div>
                     </div>
                     <div class="leading-none">
                         <p class="font-bold font-mono text-sm uppercase" th:text="${#authentication.name}">USER</p>

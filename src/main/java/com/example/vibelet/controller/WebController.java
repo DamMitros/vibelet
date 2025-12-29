@@ -188,6 +188,7 @@ public class WebController {
         }
         model.addAttribute("friendshipStatus", status);
         model.addAttribute("friendshipId", friendshipId);
+        model.addAttribute("targetUser", targetUser);
 
         return "user_profile";
     }

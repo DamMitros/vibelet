@@ -6,6 +6,7 @@ import com.example.vibelet.model.*;
 import com.example.vibelet.repository.FriendshipRepository;
 import com.example.vibelet.repository.UserRepository;
 import com.example.vibelet.repository.VibeRepository;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -51,7 +52,9 @@ public class DataExportController {
                 friendsList
         );
 
-        return ResponseEntity.ok(exportData);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"vibelet_backup.json\"")
+                .body(exportData);
     }
 
     @PostMapping("/import")

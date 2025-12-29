@@ -3,19 +3,25 @@
     <head><title>Vibe Let</title></head>
     <body>
         <div th:fragment="content">
-
             <div class="neo-box p-6 mb-8 relative bg-white transform -rotate-1">
                 <div class="absolute -top-3 -left-3 bg-acid-green border-[3px] border-black px-2 py-1 font-mono text-xs font-bold shadow-neo-sm">
                     NEW_TRANSMISSION
                 </div>
                 <form th:action="@{/vibes}" method="post" enctype="multipart/form-data">
                     <textarea name="content" class="w-full bg-off-awhite border-[3px] border-black p-4 font-mono text-lg focus:outline-none focus:bg-white focus:shadow-neo-sm transition resize-none h-32 placeholder:text-gray-400" placeholder="WRITE SOMETHING LOUD..."></textarea>
+
+                    <div id="image-preview-container" class="hidden mt-4 relative w-fit border-[3px] border-black bg-gray-100">
+                        <img id="image-preview" src="" class="max-h-48 object-cover">
+                        <button type="button" onclick="clearImage()" class="absolute -top-3 -right-3 bg-red-500 text-white border-[3px] border-black w-8 h-8 flex items-center justify-center font-bold hover:scale-110 transition shadow-neo-sm">X</button>
+                    </div>
+
                     <div class="flex justify-between items-end mt-4">
                         <div class="flex gap-2 items-center">
                             <label class="w-10 h-10 border-[3px] border-black bg-acid-pink hover:bg-white hover:shadow-neo-sm transition flex items-center justify-center cursor-pointer">
                                 <i class="fa-solid fa-image"></i>
-                                <input type="file" name="file" class="hidden">
+                                <input type="file" name="file" id="file-input" class="hidden" onchange="showPreview(this)">
                             </label>
+
                             <select name="privacy" class="h-10 border-[3px] border-black bg-white px-2 font-mono text-xs font-bold cursor-pointer hover:bg-gray-100">
                                 <option value="PUBLIC">PUBLIC</option>
                                 <option value="FRIENDS_ONLY">FRIENDS</option>
@@ -27,6 +33,26 @@
                         </button>
                     </div>
                 </form>
+
+                <script>
+                    function showPreview(input) {
+                        if (input.files && input.files[0]) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                document.getElementById('image-preview').src = e.target.result;
+                                document.getElementById('image-preview-container').classList.remove('hidden');
+                            }
+                            reader.readAsDataURL(input.files[0]);
+                        }
+                    }
+
+                    function clearImage() {
+                        const input = document.getElementById('file-input');
+                        input.value = "";
+                        document.getElementById('image-preview-container').classList.add('hidden');
+                        document.getElementById('image-preview').src = "";
+                    }
+                </script>
             </div>
 
             <div class="space-y-12">
@@ -34,7 +60,11 @@
                     <div class="border-b-[3px] border-black p-4 flex justify-between items-center bg-off-white">
                         <div class="flex items-center gap-3">
                             <a th:href="@{'/users/' + ${vibe.user.id}}" class="block w-10 h-10 border-[3px] border-black bg-acid-yellow overflow-hidden hover:opacity-80 transition">
-                                <img th:if="${vibe.user.avatarUrl}" th:src="${vibe.user.avatarUrl}" class="w-full h-full object-cover">
+                                    <img th:if="${vibe.user.avatarUrl != null and #strings.startsWith(vibe.user.avatarUrl, 'http')}"
+                                         th:src="${vibe.user.avatarUrl}" class="w-full h-full object-cover">
+
+                                    <img th:if="${vibe.user.avatarUrl != null and !#strings.startsWith(vibe.user.avatarUrl, 'http')}"
+                                         th:src="@{'/uploads/' + ${vibe.user.avatarUrl}}" class="w-full h-full object-cover">
                                 <div th:unless="${vibe.user.avatarUrl}" class="w-full h-full bg-acid-blue"></div>
                             </a>
                             <div>

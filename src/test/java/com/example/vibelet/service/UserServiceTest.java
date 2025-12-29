@@ -2,6 +2,7 @@ package com.example.vibelet.service;
 
 import com.example.vibelet.dto.UserProfileUpdateDto;
 import com.example.vibelet.dto.UserSearchDto;
+import com.example.vibelet.dto.UserSecurityUpdateDto;
 import com.example.vibelet.model.Friendship;
 import com.example.vibelet.model.FriendshipStatus;
 import com.example.vibelet.model.User;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +26,7 @@ import static org.mockito.Mockito.*;
 class UserServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private FriendshipRepository friendshipRepository;
+    @Mock private PasswordEncoder passwordEncoder;
     @InjectMocks private UserService userService;
 
     @Test
@@ -37,7 +40,7 @@ class UserServiceTest {
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
-        userService.updateUserProfile(username, dto);
+        userService.updateUserProfile(username, dto, null);
         assertEquals("New Bio", user.getBio());
     }
 
@@ -47,12 +50,12 @@ class UserServiceTest {
         UserProfileUpdateDto dto = new UserProfileUpdateDto();
         when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
         assertThrows(
-                RuntimeException.class, () -> userService.updateUserProfile(username, dto)
+                RuntimeException.class, () -> userService.updateUserProfile(username, dto, null)
         );
     }
 
     @Test
-    void updateUserPofile_ShouldUpdateStatusandAvatar() {
+    void updateUserProfile_ShouldUpdateStatusandAvatar() {
         String username = "user";
         User user = new User(); user.setUsername(username);
 
@@ -63,11 +66,32 @@ class UserServiceTest {
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
-        userService.updateUserProfile(username, dto);
+        userService.updateUserProfile(username, dto, null);
         assertAll(
                 ()->assertEquals("Online", user.getStatus()),
                 ()->assertEquals("http://avatar.url/image.png", user.getAvatarUrl())
         );
+    }
+
+    @Test
+    void updateSecurityDetails_ShouldUpdatePassword() {
+        String username = "user";
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword("encoded_old_pass");
+
+        UserSecurityUpdateDto dto = new UserSecurityUpdateDto();
+        dto.setCurrentPassword("old_pass");
+        dto.setNewPassword("new_pass");
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("old_pass", "encoded_old_pass")).thenReturn(true);
+        when(passwordEncoder.encode("new_pass")).thenReturn("encoded_new_pass");
+
+        userService.updateSecurityDetails(username, dto);
+
+        assertEquals("encoded_new_pass", user.getPassword());
+        verify(userRepository).save(user);
     }
 
     @Test

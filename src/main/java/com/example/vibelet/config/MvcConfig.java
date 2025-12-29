@@ -21,7 +21,6 @@ public class MvcConfig implements WebMvcConfigurer {
 
         if (dirName.startsWith("../")) dirName = dirName.replace("../", "");
 
-        // Dodajemy 'file:///' na początku, aby upewnić się, że system wie, że to plik lokalny
         registry.addResourceHandler("/" + dirName + "/**")
                 .addResourceLocations("file:///" + uploadPath + "/");
     }

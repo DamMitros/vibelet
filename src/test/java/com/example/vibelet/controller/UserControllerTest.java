@@ -1,11 +1,12 @@
 package com.example.vibelet.controller;
 
+import com.example.vibelet.dto.UserProfileUpdateDto;
 import com.example.vibelet.model.User;
 import com.example.vibelet.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpMethod;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -41,20 +42,12 @@ class UserControllerTest {
     @Test
     @WithMockUser(username = "me")
     void updateMyProfile_ShouldReturnOk() throws Exception {
-        String json = """
-        {
-          "username": "me",
-          "bio": "updated bio"
-        }
-        """;
-
-        given(userService.updateUserProfile(anyString(), any()))
+        given(userService.updateUserProfile(anyString(), any(UserProfileUpdateDto.class), any()))
                 .willReturn(new User());
 
-        mockMvc.perform(put("/api/v1/users/me")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/v1/users/me")
+                        .param("bio", "updated bio")
+                        .with(csrf()))
                 .andExpect(status().isOk());
     }
 
